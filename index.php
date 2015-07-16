@@ -961,7 +961,7 @@ if($action=="Consultar"){
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   //VERIFY PERMISSIONS
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  $fields="comisionid,cedula,estado,actualizacion,actualiza,institutoid";
+  $fields="comisionid,cedula,estado,actualizacion,actualiza,aprobacion,institutoid";
   $solicitudes=mysqlCmd("select $fields,TIMESTAMP(radicacion) as radicacion from Comisiones $where order by radicacion desc;",$qout=1);
   if($solicitudes==0){$nsolicitudes=0;}
   else{$nsolicitudes=count($solicitudes);}
@@ -989,9 +989,10 @@ T;
     $tinstituto=$comision['institutoid'];
     $tactualiza=$comision['actualiza'];
     $tactualizacion=$comision['actualizacion'];
+    $taprobacion=$comision['aprobacion'];
     $results=mysqlCmd("select nombre from Profesores where cedula='$tcedula'");
     $tnombre=$results[0];
-    if($qperm==2){
+    if($qperm==2 and $taprobacion=="Si"){
       $generar="<!-- -------------------------------------------------- -->
     <a href=?$USERSTRING&comisionid=$tcomisionid&operation=Resolucion&action=Consultar>
       Generar</a> |";
