@@ -1037,6 +1037,11 @@ T;
    $table="<i>No hay solicitudes.</i>";
  }
 
+ $informes="";
+ if($qperm){
+   $informes="<a href='?usercedula=$cedula&userpass=$userpass&action=Informes'>Informes</a>";
+ }
+
 $content.=<<<C
 $error
 <a href="?usercedula=$cedula&userpass=$userpass&action=Solicitar">Nueva Solicitud</a>
@@ -1045,7 +1050,7 @@ $error
 <p></p>
 $table
 <p></p>
-<a href="?usercedula=$cedula&userpass=$userpass&action=Informes">Informes</a>
+$informes
 C;
  }
 
@@ -1053,6 +1058,12 @@ C;
 //LISTA DE SOLICITUDES
 ////////////////////////////////////////////////////////////////////////
 if($action=="Informes"){
+
+  if($qperm==0){
+    $error=errorMessage("No autorizado para generar informes.");
+    $content.="$error";
+    goto footer;
+  }
   
   if(isBlank($command)){
     $command="* from Comisiones";
