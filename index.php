@@ -187,7 +187,7 @@ if(isset($operation)){
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     //ENVIAR CORREO DE NOTIFICACION
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    if($qperm!=0){
+    if($qperm==0){
       $out=mysqlCmd("select cedulajefe from Institutos where institutoid='$institutoid'");
       $cedulajefe=$out[0];
       $out=mysqlCmd("select email from Profesores where cedula='$cedulajefe'");
