@@ -1,12 +1,15 @@
 clean:
+	touch delete.pyc delete~
+	rm -r *.pyc
+	find . -name "*~" -exec rm {} \;
+
+cleandb:clean
 	mysql -u comisiones --password="123" < initialize.sql
 	python insert.py data/profesores-fcen.csv
 	touch comisiones/delete
 	rm -r comisiones/*
 	touch scratch/delete
 	rm -r scratch/*
-	rm -r *.pyc
-	rm -r *~
 
 commit:
 	@echo "Commiting changes..."
