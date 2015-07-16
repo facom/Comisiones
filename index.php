@@ -262,6 +262,52 @@ M;
       $qnew=1;
     }
 
+    if($estado=="devuelta"){
+      $emailjefe=$email;
+      
+      $subject="[Comisiones] Su solicitud de comisión ha sido devielta.";
+$message=<<<M
+  Se&ntilde;or(a) Decano(a),
+<p>
+La solicitud radicada en el <a href='bit.ly/solicitudes-fcen'>Sistema
+de Solicitudes</a> identificada con número '$comisionid' ha sido
+devuelta. La razón de la devolución se reproduce abajo:
+</p>
+<blockquote>
+$respuesta
+</blockquote>
+<p>
+Vaya al sistema y modifique la solicitud de acuerdo a las sugerencias
+indicadas.
+</p>
+<b>Sistema de Solicitud de Comisiones<br/>
+Decanatura, FCEN</b>
+M;
+      $qnew=1;
+    }
+
+    if($aprobacion=="Si"){
+      $emailjefe=$email;
+      
+      $subject="[Comisiones] Su solicitud de comisión ha sido aprobada";
+$message=<<<M
+  Se&ntilde;or(a) Profesor(a),
+<p>
+Su solicitud de comisión radicada en
+el <a href='bit.ly/solicitudes-fcen'>Sistema de Solicitudes</a> en
+fecha $radicacion e identificada con número '$comisionid' ha sido
+aprobada.  El número de resolución de decanatura es el $resolucion de $fecharesolucion.
+</p>
+<p>
+Para obtener una copia de la resolución vaya al sistema de
+solicitudes.
+</p>
+<b>Sistema de Solicitud de Comisiones<br/>
+Decanatura, FCEN</b>
+M;
+      $qnew=1;
+    }
+
     //echo "$qnew<br/>Email:$emailjefe<br/>$message<br/>";
 
     if($qnew){
@@ -551,6 +597,7 @@ if($action=="Solicitar"){
   //DEFAULT VALUES
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   $qnew=0;
+
   if(isBlank($radicacion)){
     $radicacion=$actualizacion;
     $qnew=1;
@@ -563,6 +610,11 @@ if($action=="Solicitar"){
   if(isBlank($actividad)){$actividad="Asistir al Nombre del Evento";}
   if(isBlank($aprobacion)){$aprobacion="No";}
   if(isBlank($vistobueno)){$vistobueno="No";}
+  
+  if($qperm==0 and $estado=="devuelta"){
+    $qnew=1;
+    $estado="solicitada";
+  }
 
   if($aprobacion=="No"){
     $resolucion=shell_exec("tail -n 1 etc/resoluciones.txt")+1;
