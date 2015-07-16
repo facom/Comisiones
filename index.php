@@ -265,7 +265,7 @@ M;
     if($estado=="devuelta"){
       $emailjefe=$email;
       
-      $subject="[Comisiones] Su solicitud de comisión ha sido devielta.";
+      $subject="[Comisiones] Su solicitud de comisión ha sido devuelta.";
 $message=<<<M
   Se&ntilde;or(a) Decano(a),
 <p>
@@ -956,9 +956,7 @@ comisión.</td>
 <tr>
 <td>Respuesta:</td>
 <td>
-    <textarea name="respuesta" cols=30 rows=10>
-      $respuesta
-    </textarea>
+<textarea name="respuesta" cols=30 rows=10>$respuesta</textarea>
 </td>
 </tr>
 <!---------------------------------------------------------------------->
