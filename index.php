@@ -197,8 +197,9 @@ if(isset($operation)){
 $message=<<<M
   Se&ntilde;or Director(a),
 <p>
-Una nueva solicitud de Comisión ha sido radicada en el <a href='bit.ly/solicitudes-fcen'>Sistema de
-Solicitudes</a>.  Esta es la información básica de la solicitud:
+Una nueva solicitud de Comisión ha sido radicada en
+el <a href='bit.ly/solicitudes-fcen'>Sistema de Solicitudes</a>.  Esta
+es la información básica de la solicitud:
 </p>
 <ul>
 <li>Fecha de radicación: $radicacion</li>
