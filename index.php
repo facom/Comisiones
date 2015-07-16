@@ -187,7 +187,7 @@ if(isset($operation)){
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     //ENVIAR CORREO DE NOTIFICACION
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    if($qperm==0){
+    if($qperm>-1 and $qnew){
       $out=mysqlCmd("select cedulajefe from Institutos where institutoid='$institutoid'");
       $cedulajefe=$out[0];
       $out=mysqlCmd("select email from Profesores where cedula='$cedulajefe'");
@@ -215,6 +215,31 @@ Decanatura, FCEN</b>
 M;
     }
 
+    if($vistobueno=="Si"){
+      $out=mysqlCmd("select cedulajefe from Institutos where institutoid='decanatura'");
+      $cedulajefe=$out[0];
+      $out=mysqlCmd("select email from Profesores where cedula='$cedulajefe'");
+      $emailjefe=$out[0];
+      
+      $subject="[Comisiones] Una solicitud de comisión ha recibido visto bueno";
+$message=<<<M
+  Se&ntilde;or Decano(a),
+<p>
+La solicitud radicada en el <a href='bit.ly/solicitudes-fcen'>Sistema
+de Solicitudes</a> identificada con número '$comisionid' ha recibido
+visto bueno del Director de Instituto.
+</p>
+<p>
+Por favor evalue la solicitud y en caso de ser necesario otorgue su
+aprobación continuar con el trámite.
+</p>
+<b>Sistema de Solicitud de Comisiones<br/>
+Decanatura, FCEN</b>
+M;
+    }
+
+    echo "$qnew<br/>$emailjefe<br/>$message<br/>";
+
     if($qnew){
       $headers="";
       $headers.="From: noreply@udea.edu.co\r\n";
@@ -222,7 +247,7 @@ M;
       $headers.="MIME-Version: 1.0\r\n";
       $headers.="MIME-Version: 1.0\r\n";
       $headers.="Content-type: text/html\r\n";
-      mail($email,$subject,$message,$headers);
+      mail($emailjefe,$subject,$message,$headers);
       $error.=errorMessage("Notificación enviada a $email.");
     }
 
