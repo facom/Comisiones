@@ -198,8 +198,13 @@ $message=<<<M
   Se&ntilde;or Director(a),
 <p>
 Una nueva solicitud de Comisión ha sido radicada en el <a href='bit.ly/solicitudes-fcen'>Sistema de
-Solicitudes</a>.  
+Solicitudes</a>.  Esta es la información básica de la solicitud:
 </p>
+<ul>
+<li>Fecha de radicación: $radicacion</li>
+<li>Cédula: $cedula</li>
+<li>Nombre: $nombre</li>
+</ul>
 <p>
 Por favor evalue la solicitud y en caso de ser necesario
 otorgue su visto bueno para continuar con el trámite.
@@ -208,14 +213,18 @@ otorgue su visto bueno para continuar con el trámite.
 Decanatura, FCEN</b>
 M;
     }
-    $headers="";
-    $headers.="From: noreply@udea.edu.co\r\n";
-    $headers.="Reply-to: noreply@udea.edu.co\r\n";
-    $headers.="MIME-Version: 1.0\r\n";
-    $headers.="MIME-Version: 1.0\r\n";
-    $headers.="Content-type: text/html\r\n";
-    mail($email,$subject,$message,$headers);
-    $error.=errorMessage("Notificación enviada a $email.");
+
+    if($qnew){
+      $headers="";
+      $headers.="From: noreply@udea.edu.co\r\n";
+      $headers.="Reply-to: noreply@udea.edu.co\r\n";
+      $headers.="MIME-Version: 1.0\r\n";
+      $headers.="MIME-Version: 1.0\r\n";
+      $headers.="Content-type: text/html\r\n";
+      mail($email,$subject,$message,$headers);
+      $error.=errorMessage("Notificación enviada a $email.");
+    }
+
   }//End Guardar
 
   //////////////////////////////////////////////////////////////
@@ -491,7 +500,11 @@ if($action=="Solicitar"){
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   //DEFAULT VALUES
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  if(isBlank($radicacion)){$radicacion=$actualizacion;}
+  $qnew=0;
+  if(isBlank($radicacion)){
+    $radicacion=$actualizacion;
+    $qnew=1;
+  }
   if(isBlank($estado)){$estado="solicitada";}
   if(isBlank($comisionid)){$comisionid=generateRandomString(5);}
   if(isBlank($fecha)){$fecha="Mes DD de 20XX a Mes DD de 20XX";}
@@ -870,6 +883,7 @@ comisión.</td>
 </td>
 </tr>
 </table>
+<input $disp3 type='hidden' name='qnew' value='$qnew'>
 <input $disp3 type='hidden' name='action' value='Consultar'>
 <input $disp3 type='hidden' name='usercedula' value='$usercedula'>
 <input $disp3 type='hidden' name='userpass' value='$userpass'>
