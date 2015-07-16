@@ -141,7 +141,7 @@ if(isset($operation)){
     $values_comisiones="";
     $fval_comisiones="";
     foreach($FIELDS_COMISIONES as $field){
-      $value=mysql_real_escape_string($$field);
+      $value=$$field;
       $fields_comisiones.="$field,";
       $values_comisiones.="'$value',";
       $fval_comisiones.="$field='$value',";
@@ -187,7 +187,7 @@ if(isset($operation)){
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     //ENVIAR CORREO DE NOTIFICACION
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    if($qperm==0){
+    if($qperm!=0){
       $out=mysqlCmd("select cedulajefe from Institutos where institutoid='$institutoid'");
       $cedulajefe=$out[0];
       $out=mysqlCmd("select email from Profesores where cedula='$cedulajefe'");
@@ -207,16 +207,15 @@ otorgue su visto bueno para continuar con el trámite.
 <b>Sistema de Solicitud de Comisiones<br/>
 Decanatura, FCEN</b>
 M;
-      echo "$subject<br/>$message";
     }
     $headers="";
-    $headers.="From: $from\r\n";
-    $headers.="Reply-to: $replyto\r\n";
+    $headers.="From: noreply@udea.edu.co\r\n";
+    $headers.="Reply-to: noreply@udea.edu.co\r\n";
     $headers.="MIME-Version: 1.0\r\n";
     $headers.="MIME-Version: 1.0\r\n";
     $headers.="Content-type: text/html\r\n";
     mail($email,$subject,$message,$headers);
-
+    $error.=errorMessage("Notificación enviada a $email.");
   }//End Guardar
 
   //////////////////////////////////////////////////////////////
@@ -414,6 +413,7 @@ if(isset($usercedula) and isset($userpass)){
       $qerror=1;
     }
     $userinstituto=$profesor["institutoid"];
+    $useremail=$profesor["email"];
   }
 }//End check cedula
 
