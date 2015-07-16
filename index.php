@@ -131,6 +131,7 @@ if(isset($operation)){
     }
     if($aprobacion=="Si"){
       $estado="aprobada";
+      shell_exec("echo $resolucion >> etc/resoluciones.txt");
     }
 
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
