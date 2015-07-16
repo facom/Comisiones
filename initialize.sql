@@ -1,0 +1,83 @@
+/*
+create user 'comisiones'@'localhost' identified by '123';
+create database Comisiones;
+grant all privileges on Comisiones.* to 'comisiones'@'localhost';
+flush privileges;
+*/
+use Comisiones;
+
+drop table if exists Institutos,Profesores,Comisiones;
+
+create table Institutos (
+       institutoid varchar(20),
+       instituto varchar(255),
+       cedulajefe varchar(11),
+       emailinst varchar(255),
+       extra1 varchar(255),
+       extra2 varchar(255),
+       extra3 varchar(255),
+       primary key (institutoid)
+);
+
+create table Profesores (
+       tipoid varchar(50),
+       cedula varchar(11),
+       nombre varchar(255),
+       email varchar(255),
+       tipo varchar(255),
+       pass varchar(255),
+       institutoid varchar(20),
+       permisos varchar(20),
+       extra1 varchar(255),
+       extra2 varchar(255),
+       extra3 varchar(255),
+       primary key (cedula)
+);
+
+create table Comisiones (
+       comisionid varchar(10),
+       resolucion varchar(10),
+       fecharesolucion varchar(50),
+       cedula varchar(11),
+       institutoid varchar(30),
+       fecha varchar(255),
+       actividad varchar(255),
+       lugar varchar(255),
+       tipocom varchar(255),
+       objeto varchar(255),
+       idioma varchar(255),
+       dedicacion varchar(10),
+       estado varchar(10),
+       radicacion varchar(100),
+       actualizacion varchar(100),
+       actualiza varchar(100),
+       vistobueno varchar(10),
+       aprobacion varchar(10),
+       anexo1 varchar(255),
+       anexo2 varchar(255),
+       anexo3 varchar(255),
+       extra1 varchar(255),
+       extra2 varchar(255),
+       extra3 varchar(255),
+       primary key (comisionid)
+);
+
+insert into Institutos (institutoid,instituto,cedulajefe,emailinst)
+       values ('fisica','Instituto de Física','71755174',
+       'pregradofisica@udea.edu.co');
+
+insert into Institutos (institutoid,instituto,cedulajefe,emailinst)
+       values ('quimica','Instituto de Química','71755175',
+       'pregradofisica@udea.edu.co');
+
+insert into Institutos (institutoid,instituto,cedulajefe,emailinst)
+       values ('biologia','Instituto de Biología','71755176',
+       'pregradofisica@udea.edu.co');
+
+insert into Institutos (institutoid,instituto,cedulajefe,emailinst)
+       values ('matematicas','Instituto de Matemáticas','71755177',
+       'pregradofisica@udea.edu.co');
+
+insert into Institutos (institutoid,instituto,cedulajefe,emailinst)
+       values ('decanatura','Decanatura','71755174',
+       'pregradofisica@udea.edu.co');
