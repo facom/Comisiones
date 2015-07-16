@@ -236,6 +236,7 @@ aprobación continuar con el trámite.
 <b>Sistema de Solicitud de Comisiones<br/>
 Decanatura, FCEN</b>
 M;
+      $qnew=1;
     }
 
     echo "$qnew<br/>Email:$emailjefe<br/>$message<br/>";
