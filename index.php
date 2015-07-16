@@ -191,7 +191,7 @@ if(isset($operation)){
       $out=mysqlCmd("select cedulajefe from Institutos where institutoid='$institutoid'");
       $cedulajefe=$out[0];
       $out=mysqlCmd("select email from Profesores where cedula='$cedulajefe'");
-      $email=$out[0];
+      $emailjefe=$out[0];
       
       $subject="[Comisiones] Nueva solicitud de comisión de $cedula, $nombre";
 $message=<<<M
@@ -238,7 +238,7 @@ Decanatura, FCEN</b>
 M;
     }
 
-    echo "$qnew<br/>$emailjefe<br/>$message<br/>";
+    echo "$qnew<br/>Email:$emailjefe<br/>$message<br/>";
 
     if($qnew){
       $headers="";
@@ -248,7 +248,7 @@ M;
       $headers.="MIME-Version: 1.0\r\n";
       $headers.="Content-type: text/html\r\n";
       mail($emailjefe,$subject,$message,$headers);
-      $error.=errorMessage("Notificación enviada a $email.");
+      $error.=errorMessage("Notificación enviada a $emailjefe.");
     }
 
   }//End Guardar
