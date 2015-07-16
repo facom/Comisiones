@@ -194,7 +194,7 @@ if(isset($operation)){
       $out=mysqlCmd("select email from Profesores where cedula='$cedulajefe'");
       $emailjefe=$out[0];
       
-      $subject="[Comisiones] Nueva solicitud de comisión de $cedula, $nombre";
+      $subject="[Comisiones] Nueva solicitud de comisión que requiere visto bueno";
 $message=<<<M
   Se&ntilde;or(a) Director(a),
 <p>
@@ -250,7 +250,7 @@ $message=<<<M
 Su solicitud de comisión radicada en
 el <a href='bit.ly/solicitudes-fcen'>Sistema de Solicitudes</a> en
 fecha $radicacion e identificada con número '$comisionid' ha sido
-aprobada.
+aprobada.  El número de resolución de decanatura es el $resolucion de $fecharesolucion.
 </p>
 <p>
 Para obtener una copia de la resolución vaya al sistema de
