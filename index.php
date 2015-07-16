@@ -195,7 +195,7 @@ if(isset($operation)){
       
       $subject="[Comisiones] Nueva solicitud de comisión de $cedula, $nombre";
 $message=<<<M
-  Se&ntilde;or Director(a),
+  Se&ntilde;or(a) Director(a),
 <p>
 Una nueva solicitud de Comisión ha sido radicada en
 el <a href='bit.ly/solicitudes-fcen'>Sistema de Solicitudes</a>.  Esta
@@ -223,7 +223,7 @@ M;
       
       $subject="[Comisiones] Una solicitud de comisión ha recibido visto bueno";
 $message=<<<M
-  Se&ntilde;or Decano(a),
+  Se&ntilde;or(a) Decano(a),
 <p>
 La solicitud radicada en el <a href='bit.ly/solicitudes-fcen'>Sistema
 de Solicitudes</a> identificada con número '$comisionid' ha recibido
@@ -239,7 +239,29 @@ M;
       $qnew=1;
     }
 
-    echo "$qnew<br/>Email:$emailjefe<br/>$message<br/>";
+    if($aprobacion=="Si"){
+      $emailjefe=$email;
+      
+      $subject="[Comisiones] Su solicitud de comisión ha sido aprobada";
+$message=<<<M
+  Se&ntilde;or(a) Profesor(a),
+<p>
+Su solicitud de comisión radicada en
+el <a href='bit.ly/solicitudes-fcen'>Sistema de Solicitudes</a> en
+fecha $radicacion e identificada con número '$comisionid' ha sido
+aprobada.
+</p>
+<p>
+Para obtener una copia de la resolución vaya al sistema de
+solicitudes.
+</p>
+<b>Sistema de Solicitud de Comisiones<br/>
+Decanatura, FCEN</b>
+M;
+      $qnew=1;
+    }
+
+    //echo "$qnew<br/>Email:$emailjefe<br/>$message<br/>";
 
     if($qnew){
       $headers="";
