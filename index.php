@@ -199,7 +199,7 @@ $message=<<<M
   Se&ntilde;or(a) Director(a),
 <p>
 Una nueva solicitud de Comisión ha sido radicada en
-el <a href='bit.ly/solicitudes-fcen'>Sistema de Solicitudes</a>.  Esta
+el <a href='bit.ly/fcen-comisiones'>Sistema de Solicitudes</a>.  Esta
 es la información básica de la solicitud:
 </p>
 <ul>
@@ -226,7 +226,7 @@ M;
 $message=<<<M
   Se&ntilde;or(a) Decano(a),
 <p>
-La solicitud radicada en el <a href='bit.ly/solicitudes-fcen'>Sistema
+La solicitud radicada en el <a href='bit.ly/fcen-comisiones'>Sistema
 de Solicitudes</a> identificada con número '$comisionid' ha recibido
 visto bueno del Director de Instituto.
 </p>
@@ -248,7 +248,7 @@ $message=<<<M
   Se&ntilde;or(a) Profesor(a),
 <p>
 Su solicitud de comisión radicada en
-el <a href='bit.ly/solicitudes-fcen'>Sistema de Solicitudes</a> en
+el <a href='bit.ly/fcen-comisiones'>Sistema de Solicitudes</a> en
 fecha $radicacion e identificada con número '$comisionid' ha sido
 aprobada.  El número de resolución de decanatura es el $resolucion de $fecharesolucion.
 </p>
@@ -269,7 +269,7 @@ M;
 $message=<<<M
   Se&ntilde;or(a) Decano(a),
 <p>
-La solicitud radicada en el <a href='bit.ly/solicitudes-fcen'>Sistema
+La solicitud radicada en el <a href='bit.ly/fcen-comisiones'>Sistema
 de Solicitudes</a> identificada con número '$comisionid' ha sido
 devuelta. La razón de la devolución se reproduce abajo:
 </p>
@@ -294,7 +294,7 @@ $message=<<<M
   Se&ntilde;or(a) Profesor(a),
 <p>
 Su solicitud de comisión radicada en
-el <a href='bit.ly/solicitudes-fcen'>Sistema de Solicitudes</a> en
+el <a href='bit.ly/fcen-comisiones'>Sistema de Solicitudes</a> en
 fecha $radicacion e identificada con número '$comisionid' ha sido
 aprobada.  El número de resolución de decanatura es el $resolucion de $fecharesolucion.
 </p>

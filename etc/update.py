@@ -1,9 +1,19 @@
 #-*-coding:utf-8-*-
 from comisiones import *
+comisiones,connection=loadDatabase()
+db=connection.cursor()
 
 # ############################################################
-# LOAD CSV FILE
+# LOAD SQL FILE INSTITUTOS
 # ############################################################
+print "Updating institutes information..."
+system("mysql -u %s --password='%s' < institutos.sql"%(USER,PASSWORD))
+
+
+# ############################################################
+# LOAD CSV FILE WITH PROFESORES
+# ############################################################
+print "Updating Profesores information..."
 filecsv=argv[1]
 csvfile=open("%s"%filecsv,"rU")
 content=csv.DictReader(csvfile,dialect="excel",delimiter=";")
@@ -29,9 +39,6 @@ csvfile.close()
 # ############################################################
 # DATABASE COMMAND
 # ############################################################
-comisiones,connection=loadDatabase()
-db=connection.cursor()
-
 fieldstxt="("
 for field in profesores["fields"]:
     fieldstxt+="%s,"%field
@@ -47,7 +54,7 @@ for cedula in profesores.keys():
     for field in profesores["fields"]:
         sql+="'%s',"%profesor[field]
     sql=sql.strip(",")
-    sql+=");\n"
+    sql+=") on duplicate key update cedula='%s';\n"%cedula
     db.execute(sql)
 
 connection.commit()
