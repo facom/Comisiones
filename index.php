@@ -16,6 +16,15 @@ $content.=<<<C
   <meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
   <script src="etc/jquery.js"></script>
   $style
+
+  <script>
+    function selectCorta(selection){
+	if($(selection).val().localeCompare("corta")==0){
+	    $(".discorta").hide();
+	}
+    }
+  </script>
+
 </head>
 <body>
 C;
@@ -131,7 +140,11 @@ if(isset($operation)){
     }
     if($aprobacion=="Si"){
       $estado="aprobada";
-      shell_exec("echo $resolucion >> etc/resoluciones.txt");
+      if($tipocom!="corta"){
+	shell_exec("echo $resolucion >> etc/resoluciones.txt");
+      }else{
+	$resolucion="99999";
+      }
     }
 
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -193,6 +206,8 @@ if(isset($operation)){
       $cedulajefe=$out[0];
       $out=mysqlCmd("select email from Profesores where cedula='$cedulajefe'");
       $emailjefe=$out[0];
+      $ttipocom=$TIPOSCOM[$tipocom];
+      $destino="Director";
       
       $subject="[Comisiones] Nueva solicitud de comisión que requiere visto bueno";
 $message=<<<M
@@ -204,6 +219,8 @@ es la información básica de la solicitud:
 </p>
 <ul>
 <li>Fecha de radicación: $radicacion</li>
+<li>Tipo de comision: $ttipocom</li>
+<li>Fecha de comision: $fecha</li>
 <li>Cédula: $cedula</li>
 <li>Nombre: $nombre</li>
 </ul>
@@ -221,6 +238,7 @@ M;
       $cedulajefe=$out[0];
       $out=mysqlCmd("select email from Profesores where cedula='$cedulajefe'");
       $emailjefe=$out[0];
+      $destino="Decano";
       
       $subject="[Comisiones] Una solicitud de comisión ha recibido visto bueno";
 $message=<<<M
@@ -242,7 +260,20 @@ M;
 
     if($aprobacion=="Si"){
       $emailjefe=$email;
-      
+
+$restxt=<<<R
+El número de resolución de decanatura es el $resolucion de $fecharesolucion.
+</p>
+<p>
+Para obtener una copia de la resolución de click en <a href="$URL/comisiones/$comisionid/resolucion-$comisionid.pdf">este enlace</a>.
+  En caso de que el enlace este roto (no se haya expedido la resolución) pregunte en la vicedecanatura por la misma o espere a que el link aparezca en el Sistema de Solicitudes.
+</p>
+R;
+      if($tipocom=="corta"){
+	$restxt="";
+      }
+      echo "Tipo = $tipocom";
+
       $subject="[Comisiones] Su solicitud de comisión ha sido aprobada";
 $message=<<<M
   Se&ntilde;or(a) Profesor(a),
@@ -250,12 +281,7 @@ $message=<<<M
 Su solicitud de comisión radicada en
 el <a href='bit.ly/fcen-comisiones'>Sistema de Solicitudes</a> en
 fecha $radicacion e identificada con número '$comisionid' ha sido
-aprobada.  El número de resolución de decanatura es el $resolucion de $fecharesolucion.
-</p>
-<p>
-Para obtener una copia de la resolución vaya al sistema de
-solicitudes.
-</p>
+aprobada.  $restxt
 <b>Sistema de Solicitud de Comisiones<br/>
 Decanatura, FCEN</b>
 M;
@@ -264,6 +290,7 @@ M;
 
     if($estado=="devuelta"){
       $emailjefe=$email;
+      $destino="Solicitante";
       
       $subject="[Comisiones] Su solicitud de comisión ha sido devuelta.";
 $message=<<<M
@@ -288,6 +315,7 @@ M;
 
     if($aprobacion=="Si"){
       $emailjefe=$email;
+      $destino="Solicitante";
       
       $subject="[Comisiones] Su solicitud de comisión ha sido aprobada";
 $message=<<<M
@@ -317,8 +345,8 @@ M;
       $headers.="MIME-Version: 1.0\r\n";
       $headers.="MIME-Version: 1.0\r\n";
       $headers.="Content-type: text/html\r\n";
-      mail($emailjefe,$subject,$message,$headers);
-      $error.=errorMessage("Notificación enviada a $emailjefe.");
+      //mail($emailjefe,$subject,$message,$headers);
+      $error.=errorMessage("Notificación enviada a $destino $emailjefe.");
     }
 
   }//End Guardar
@@ -513,7 +541,7 @@ if(isset($usercedula) and isset($userpass)){
 	$$field=$profesor[$field];
       }
     }else{
-      $error=errorMessage("Contraseña equivocada");
+      $error=errorMessage("Contraseña equivocada o recientemente cambiada");
       $inputform=1;
       $qerror=1;
     }
@@ -585,6 +613,7 @@ if($action=="Solicitar"){
     foreach($TEXTS as $text){
       $$text=shell_exec("cat comisiones/$comisionid/$text.txt");
     }
+    $error=errorMessage("Solicitud $comisionid cargada");
   }    
 
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -618,8 +647,9 @@ if($action=="Solicitar"){
 
   if($aprobacion=="No"){
     $resolucion=shell_exec("tail -n 1 etc/resoluciones.txt")+1;
-    setlocale(LC_TIME,"es_ES.UTF-8");
-    $fecharesolucion=strftime("%d de %B de %Y (%H:%m:%S)");
+    setlocale(LC_TIME,"");
+    setlocale(LC_TIME,"es_ES.UTF-8") or setlocale(LC_TIME,"es_ES");
+    $fecharesolucion=strftime("%d de %B de %Y");
     $fecharesolucion=ucfirst($fecharesolucion);
   }
   $disabled="readonly='readonly'";
@@ -655,11 +685,22 @@ R;
   if($qperm==1){
     $disp2="style='display:none'";
   }
+  if($vistobueno=="Si"){
+    $notification="<i style='color:blue'>Esta solicitud ya ha recibido visto bueno del director.</i>";
+    if($qperm==0){
+      $disp3="disabled";
+    }
+  }
   if($aprobacion=="Si"){
     $notification="<i style='color:blue'>Esta solicitud ya ha sido aprobada</i>";
     if($qperm<=1){
       $disp3="disabled";
     }
+  }
+  
+  $discortastyle="";
+  if($tipocom=="corta"){
+    $discortastyle="style='display:none'";
   }
 
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -668,16 +709,17 @@ R;
   $estadosel=generateSelection($ESTADOS,"estado",$estado,$disabled="$disp3");
   $tiposel=generateSelection($TIPOS,"tipo",$tipo,$disabled="$disp3");
   $tipoidsel=generateSelection($TIPOSID,"tipoid",$tipoid,$disabled="$disp3");
-  $tipocomsel=generateSelection($TIPOSCOM,"tipocom",$tipocom,$disabled="$disp3");
   $instsel=generateSelection($INSTITUTOS,"institutoid",$institutoid,$disabled="$disp3");
   $dedsel=generateSelection($SINO,"dedicacion",$dedicacion,$disabled="$disp3");
   $vobosel=generateSelection($SINO,"vistobueno",$vistobueno,$disabled="$disp3");
   $aprosel=generateSelection($SINO,"aprobacion",$aprobacion,$disabled="$disp3");
+  $tipocomsel=generateSelection($TIPOSCOM,"tipocom",$tipocom,$disabled="$disp3 onchange='selectCorta(this)'");
 
 $content.=<<<C
 <a href="?$USERSTRING&action=Consultar">Lista de Solicitudes</a>
 <p/>
 $error
+<a href="?usercedula=$usercedula&userpass=$userpass&action=Solicitar">Nueva Solicitud</a>
 <h2>Solicitud de Comisión</h2>
 <a href="JavaScript:void(null)" onclick="$('.ayuda').toggle('fast',null);" style="font-size:12px">Mostrar/Ocultar ayuda</a>
 <p></p>
@@ -775,7 +817,7 @@ comisión.</td>
 <td colspan=2>Indique el tipo de comisión solicitada.</td>
 </tr>
 <!---------------------------------------------------------------------->
-<tr>
+<tr class="discorta" $discortastyle>
 <td>Lugar de la comisión:</td>
 <td><input $disp3 type="text" name="lugar" value="$lugar" size=30></td>
 </tr>
@@ -795,7 +837,7 @@ a un acta de consejo de facultad para que sea recomendada a
 vicerrectoría de docencia.</td>
 </tr>
 <!---------------------------------------------------------------------->
-<tr>
+<tr class="discorta" $discortastyle>
 <td>Motivo de la comisión:</td>
 <td><input $disp3 type="text" name="actividad" value="$actividad" size=30></td>
 </tr>
@@ -804,7 +846,7 @@ vicerrectoría de docencia.</td>
 "Participar", etc.</td>
 </tr>
 <!---------------------------------------------------------------------->
-<tr>
+<tr class="discorta" $discortastyle>
 <td>Idioma de la actividad:</td>
 <td><input $disp3 type="text" name="idioma" value="$idioma" size=30></td>
 </tr>
@@ -826,7 +868,7 @@ y tiene responsabilidades docentes indique claramente quién se
 encargará de sus responsabilidades durante su ausencia.</td>
 </tr>
 <!---------------------------------------------------------------------->
-<tr>
+<tr class="discorta" $discortastyle>
 <td>Anexo 1:</td>
 <td>
   <input $disp3 type="file" name="file_anexo1" value="$file_anexo1"><br/>
@@ -838,7 +880,7 @@ encargará de sus responsabilidades durante su ausencia.</td>
 <td colspan=2>Anexe la carta de invitación o cualquier otro soporte de la comisión.</td>
 </tr>
 <!---------------------------------------------------------------------->
-<tr>
+<tr class="discorta" $discortastyle>
 <td>Anexo 2:</td>
 <td>
   <input $disp3 type="file" name="file_anexo2" value="$file_anexo2"><br/>
@@ -850,7 +892,7 @@ encargará de sus responsabilidades durante su ausencia.</td>
 <td colspan=2></td>
 </tr>
 <!---------------------------------------------------------------------->
-<tr>
+<tr class="discorta" $discortastyle>
 <td>Anexo 3:</td>
 <td>
   <input $disp3 type="file" name="file_anexo3" value="$file_anexo3"><br/>
@@ -862,7 +904,7 @@ encargará de sus responsabilidades durante su ausencia.</td>
 <td colspan=2></td>
 </tr>
 <!---------------------------------------------------------------------->
-<tr>
+<tr class="discorta" $discortastyle>
 <td>Resolución:</td>
 <td>
 $reslink
@@ -926,7 +968,7 @@ del director pero espera aprobación de Decano), Aprobada por Decano
 <td colspan=2><hr/><b>Reservado para la administración</b></td>
 </tr>
 <!---------------------------------------------------------------------->
-<tr $disp2>
+<tr $disp2 class="discorta" $discortastyle>
 <td>Número de Resolucion:</td>
 <td><input $disp3 type="text" name="resolucion" value="$resolucion" size=11></td>
 </tr>
@@ -935,7 +977,7 @@ del director pero espera aprobación de Decano), Aprobada por Decano
 comisión.</td>
 </tr>
 <!---------------------------------------------------------------------->
-<tr $disp2>
+<tr $disp2 class="discorta" $discortastyle>
 <td>Fecha de Resolucion:</td>
 <td><input $disp3 type="text" name="fecharesolucion" value="$fecharesolucion" size=20></td>
 </tr>
@@ -960,7 +1002,7 @@ comisión.</td>
 </td>
 </tr>
 <!---------------------------------------------------------------------->
-<tr $disp2>
+<tr $disp2 class="discorta" $discortastyle>
 <td>Resolución:</td>
 <td>
   <a href=?$USERSTRING&comisionid=$comisionid&operation=Resolucion&action=Solicitar>
@@ -1011,7 +1053,7 @@ if($action=="Consultar"){
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   //VERIFY PERMISSIONS
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  $fields="comisionid,cedula,estado,actualizacion,actualiza,aprobacion,institutoid";
+  $fields="comisionid,cedula,estado,actualizacion,actualiza,aprobacion,institutoid,tipocom";
   $solicitudes=mysqlCmd("select $fields,TIMESTAMP(radicacion) as radicacion from Comisiones $where order by radicacion desc;",$qout=1);
   if($solicitudes==0){$nsolicitudes=0;}
   else{$nsolicitudes=count($solicitudes);}
@@ -1022,6 +1064,7 @@ $table=<<<T
   <td width=10%>Comisión</td>
   <td width=10%>Radicación</td>
   <td width=10%>Actualización</td>
+  <td>Tipo</td>
   <td>Estado</td>
   <td>Instituto</td>
   <td width=40%>Solicitante</td>
@@ -1034,15 +1077,33 @@ T;
     $comision=$solicitudes[$i];
     $tcomisionid=$comision['comisionid'];
     $tcedula=$comision['cedula'];
-    $testado=$comision['estado'];
+    $testadox=$comision['estado'];
+    $testado=$ESTADOS[$testadox];
+    $ttipocomx=$comision['tipocom'];
+    $ttipocom=$TIPOSCOM[$ttipocomx];
+
+    if($ttipocomx=="corta"){
+      $estadocolor="pink";
+    }else{
+      $estadocolor="yellow";
+    }
+    if($testadox=="aprobada"){$estadocolor="lightgreen";}
+    if($testadox=="vistobueno"){
+      if($ttipocomx=="corta"){
+	$estadocolor="orange";
+      }else{
+	$estadocolor="lightblue";
+      }
+    }
+
     $tradicacion=$comision['radicacion'];
-    $tinstituto=$comision['institutoid'];
+    $tinstituto=$INSTITUTOS[$comision['institutoid']];
     $tactualiza=$comision['actualiza'];
     $tactualizacion=$comision['actualizacion'];
     $taprobacion=$comision['aprobacion'];
     $results=mysqlCmd("select nombre from Profesores where cedula='$tcedula'");
     $tnombre=$results[0];
-    if($qperm==2 and $taprobacion=="Si"){
+    if($qperm==2 and $taprobacion=="Si" and $ttipocomx!="corta"){
       $generar="<!-- -------------------------------------------------- -->
     <a href=?$USERSTRING&comisionid=$tcomisionid&operation=Resolucion&action=Consultar>
       Generar</a> |";
@@ -1058,7 +1119,7 @@ T;
     }
 
 $table.=<<<T
-<tr>
+<tr style='background:$estadocolor'>
   <td>
     <a href=?$USERSTRING&loadcomision&comisionid=$tcomisionid&action=Solicitar>
       $tcomisionid
@@ -1066,6 +1127,7 @@ $table.=<<<T
   </td>
   <td>$tradicacion</td>
   <td>$tactualizacion<br/>Usuario:$actualiza</td>
+  <td>$ttipocom</td>
   <td>$testado</td>
   <td>$tinstituto</td>
   <td>$tcedula, $tnombre</td>
@@ -1096,7 +1158,8 @@ T;
 
 $content.=<<<C
 $error
-<a href="?usercedula=$cedula&userpass=$userpass&action=Solicitar">Nueva Solicitud</a>
+<a href="?usercedula=$usercedula&userpass=$userpass&action=Solicitar">Nueva Solicitud</a> | 
+<a href="?$USERSTRING&action=Consultar">Lista de Solicitudes</a>
 <h2>Lista de solicitudes.</h2>
   Número de solicitudes: $nsolicitudes
 <p></p>

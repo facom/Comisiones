@@ -13,7 +13,6 @@ system("mysql -u %s --password='%s' < institutos.sql"%(USER,PASSWORD))
 # ############################################################
 # LOAD CSV FILE WITH PROFESORES
 # ############################################################
-print "Updating Profesores information..."
 filecsv=argv[1]
 csvfile=open("%s"%filecsv,"rU")
 content=csv.DictReader(csvfile,dialect="excel",delimiter=";")
@@ -23,14 +22,6 @@ for row in content:
     if cedula=="":continue
     profesores['fields']=row.keys()
     profesores[cedula]=dict()
-    """
-    for key in row.keys():
-        print type(row[key])
-        print key
-        print row[key]
-        row[key]=row[key].decode('utf-8')
-        print row[key]
-        """
     row["pass"]=row["cedula"]
     profesores[cedula].update(row)
 profesores['fields']+=["pass"]
@@ -39,10 +30,15 @@ csvfile.close()
 # ############################################################
 # DATABASE COMMAND
 # ############################################################
+print "Updating Profesores information..."
 fieldstxt="("
+fieldsup=""
 for field in profesores["fields"]:
     fieldstxt+="%s,"%field
+    if field!="pass":
+        fieldsup+="%s=VALUES(%s),"%(field,field)
 fieldstxt=fieldstxt.strip(",")
+fieldsup=fieldsup.strip(",")
 fieldstxt+=")"
 
 for cedula in profesores.keys():
@@ -54,7 +50,7 @@ for cedula in profesores.keys():
     for field in profesores["fields"]:
         sql+="'%s',"%profesor[field]
     sql=sql.strip(",")
-    sql+=") on duplicate key update cedula='%s';\n"%cedula
+    sql+=") on duplicate key update %s;\n"%fieldsup
     db.execute(sql)
 
 connection.commit()
