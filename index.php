@@ -356,7 +356,7 @@ M;
       $headers.="MIME-Version: 1.0\r\n";
       $headers.="MIME-Version: 1.0\r\n";
       $headers.="Content-type: text/html\r\n";
-      //mail($emailjefe,$subject,$message,$headers);
+      mail($emailjefe,$subject,$message,$headers);
       $error.=errorMessage("Notificación enviada a $destino $emailjefe.");
     }
 
@@ -1192,7 +1192,6 @@ T;
     $tcomisionid=$comision['comisionid'];
     $tcedula=$comision['cedula'];
     $testadox=$comision['estado'];
-    echo "$tcomisionid,$testadox<br/>";
     $testado=$ESTADOS[$testadox];
     $ttipocomx=$comision['tipocom'];
     $ttipocom=$TIPOSCOM[$ttipocomx];
