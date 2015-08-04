@@ -137,13 +137,22 @@ if(isset($operation)){
 
     if($vistobueno=="Si"){
       $estado="vistobueno";
+    }else{
+      $estado="solicitada";
     }
+
     if($aprobacion=="Si"){
       $estado="aprobada";
       if($tipocom!="corta"){
 	shell_exec("echo $resolucion >> etc/resoluciones.txt");
       }else{
 	$resolucion="99999";
+      }
+    }else{
+      if($vistobueno=="Si"){
+	$estado="vistobueno";
+      }else{
+	$estado="solicitada";
       }
     }
 
@@ -1157,7 +1166,7 @@ if($action=="Consultar"){
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   //VERIFY PERMISSIONS
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  $fields="comisionid,cedula,estado,actualizacion,actualiza,aprobacion,institutoid,tipocom";
+  $fields="comisionid,cedula,estado,actualizacion,actualiza,aprobacion,institutoid,tipocom,vistobueno";
   $solicitudes=mysqlCmd("select $fields,TIMESTAMP(radicacion) as radicacion from Comisiones $where order by radicacion desc;",$qout=1);
   if($solicitudes==0){$nsolicitudes=0;}
   else{$nsolicitudes=count($solicitudes);}
@@ -1183,6 +1192,7 @@ T;
     $tcomisionid=$comision['comisionid'];
     $tcedula=$comision['cedula'];
     $testadox=$comision['estado'];
+    echo "$tcomisionid,$testadox<br/>";
     $testado=$ESTADOS[$testadox];
     $ttipocomx=$comision['tipocom'];
     $ttipocom=$TIPOSCOM[$ttipocomx];
@@ -1206,6 +1216,8 @@ T;
     $tactualiza=$comision['actualiza'];
     $tactualizacion=$comision['actualizacion'];
     $taprobacion=$comision['aprobacion'];
+    $tvistobueno=$comision['vistobueno'];
+
     $results=mysqlCmd("select nombre from Profesores where cedula='$tcedula'");
     $tnombre=$results[0];
     if($qperm==2 and $taprobacion=="Si" and $ttipocomx!="corta"){
@@ -1231,6 +1243,12 @@ T;
     }else{
       $reslink="<i>No disponible</i>";
     }
+    $borrar="";
+    if($taprobacion!="Si" and $tvistobueno!="Si"){
+      $borrar="<!-- -------------------------------------------------- -->
+  <a href=?$USERSTRING&comisionid=$tcomisionid&operation=Borrar&action=Consultar>
+  Borrar</a>";
+    }   
 
 $table.=<<<T
 <tr style='background:$estadocolor'>
@@ -1253,9 +1271,7 @@ $table.=<<<T
   $extrares
   </td>
   <td>
-  <!-- -------------------------------------------------- -->
-  <a href=?$USERSTRING&comisionid=$tcomisionid&operation=Borrar&action=Consultar>
-  Borrar</a>
+$borrar
   </td>
 </tr>
 T;
