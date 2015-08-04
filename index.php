@@ -345,7 +345,7 @@ M;
       $headers.="MIME-Version: 1.0\r\n";
       $headers.="MIME-Version: 1.0\r\n";
       $headers.="Content-type: text/html\r\n";
-      //mail($emailjefe,$subject,$message,$headers);
+      mail($emailjefe,$subject,$message,$headers);
       $error.=errorMessage("Notificación enviada a $destino $emailjefe.");
     }
 
@@ -716,7 +716,7 @@ R;
   $tipocomsel=generateSelection($TIPOSCOM,"tipocom",$tipocom,$disabled="$disp3 onchange='selectCorta(this)'");
 
 $content.=<<<C
-<a href="?$USERSTRING&action=Consultar">Lista de Solicitudes</a>
+  <a href="?$USERSTRING&action=Consultar">Lista de Solicitudes</a> | <a href="?$USERSTRING">Salir</a>
 <p/>
 $error
 <a href="?usercedula=$usercedula&userpass=$userpass&action=Solicitar">Nueva Solicitud</a>
@@ -1159,7 +1159,7 @@ T;
 $content.=<<<C
 $error
 <a href="?usercedula=$usercedula&userpass=$userpass&action=Solicitar">Nueva Solicitud</a> | 
-<a href="?$USERSTRING&action=Consultar">Lista de Solicitudes</a>
+<a href="?$USERSTRING&action=Consultar">Lista de Solicitudes</a> | <a href="?$USERSTRING">Salir</a>
 <h2>Lista de solicitudes.</h2>
   Número de solicitudes: $nsolicitudes
 <p></p>
