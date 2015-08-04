@@ -313,7 +313,9 @@ M;
       $qnew=1;
     }
 
+    if(!file_exists("comisiones/$comisionid/.notified")){
     if($aprobacion=="Si"){
+      shell_exec("touch comisiones/$comisionid/.notified");
       $emailjefe=$email;
       $destino="Solicitante";
       
@@ -335,9 +337,9 @@ Decanatura, FCEN</b>
 M;
       $qnew=1;
     }
-
-    //echo "$qnew<br/>Email:$emailjefe<br/>$message<br/>";
-
+    }else{
+      $qnew=0;
+    }
     if($qnew){
       $headers="";
       $headers.="From: noreply@udea.edu.co\r\n";
@@ -345,7 +347,7 @@ M;
       $headers.="MIME-Version: 1.0\r\n";
       $headers.="MIME-Version: 1.0\r\n";
       $headers.="Content-type: text/html\r\n";
-      mail($emailjefe,$subject,$message,$headers);
+      //mail($emailjefe,$subject,$message,$headers);
       $error.=errorMessage("Notificación enviada a $destino $emailjefe.");
     }
 
@@ -441,7 +443,7 @@ RESOLUCION DE DECANATO $resolucion
 PARA LA CUAL SE CONCEDE UNA $rtipocom
 </p>
 
-<p>
+<p align="justify">
 LA DECANA DE LA FACULTAD DE CIENCIAS EXACTAS Y NATURALES en
 uso de sus atribuciones conferidas mediante artículo 34, literal ñ del
 Acuerdo Superior Nro. 1 de 1994.
@@ -451,13 +453,13 @@ Acuerdo Superior Nro. 1 de 1994.
 RESUELVE:
 </p>
 
-<p>
+<p align="justify">
 <b>ARTÍCULO ÚNICO</b>: Conceder al profesor <b>$rnombre</b> $rtipoid
 $cedula, $rtipo del $rinstituto, comisión de $fecha para $actividad a
 realizarse en $lugar.
 </p>
 
-<p>
+<p align="justify">
 <i>
 Al reintegrarse a sus actividades deberá presentar ante la oficina de
 la Decanato de la Facultad, constancias que acrediten su cumplimiento.
@@ -488,9 +490,101 @@ Copia: $COORDINADOR, $COORDINADORTXT de Talento Humano Archivo.
 R;
     fwrite($fl,$resoltxt);
     fclose($fl);
-    //*
+
+    $fl=fopen("comisiones/$comisionid/resolucion-blank-$comisionid.html","w");
+$resoltxt=<<<R
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <style type="text/css">
+  BODY{
+  font-size:12px;
+  font-family:Times;
+  }
+  td{
+  font-size:18px;
+  font-family:Times;
+  }
+  </style>
+</head>
+
+<body>
+
+<table border=0 width=$tablewidth style=$tablestyle>
+  <tr>
+    <td width=10%>
+      <img src="../../images/udea-fake.jpg" width=100>
+    </td>
+    <td width=20%></td>
+    <td width=40% style='text-align:center'>
+      <!--<b>FACULTAD DE CIENCIAS EXACTAS<br/>Y NATURALES</b>-->
+    </td>
+  </tr>
+</table>
+
+<table border=0 width=$tablewidth style=$tablestyle>
+<tr><td>
+
+<div style="height:$vspace"></div>
+
+<p style=$titlestyle>
+RESOLUCION DE DECANATO $resolucion
+</p>
+
+<p style=$titlestyle>
+PARA LA CUAL SE CONCEDE UNA $rtipocom
+</p>
+
+<p align="justify">
+LA DECANA DE LA FACULTAD DE CIENCIAS EXACTAS Y NATURALES en
+uso de sus atribuciones conferidas mediante artículo 34, literal ñ del
+Acuerdo Superior Nro. 1 de 1994.
+</p> 
+
+<p style=$titlestyle>
+RESUELVE:
+</p>
+
+<p align="justify">
+<b>ARTÍCULO ÚNICO</b>: Conceder al profesor <b>$rnombre</b> $rtipoid
+$cedula, $rtipo del $rinstituto, comisión de $fecha para $actividad a
+realizarse en $lugar.
+</p>
+
+<p align="justify">
+<i>
+Al reintegrarse a sus actividades deberá presentar ante la oficina de
+la Decanato de la Facultad, constancias que acrediten su cumplimiento.
+</i>
+</p>
+
+<p style=$titlestyle>
+COMUNÍQUESE Y CÚMPLASE
+</p>
+
+<p>
+Dada en Medellín el $fecharesolucion.
+</p>
+<p>
+<img src="../../images/decano-fake.jpg" width=300px><br/>
+<b>NORA EUGENIA RESTREPO SÁNCHEZ</b><br/>
+$DECANOTXT, Facultad de Ciencias Exactas y Naturales
+</p>
+
+<p style="font-size:14px">
+Copia: $COORDINADOR, $COORDINADORTXT de Talento Humano Archivo.
+</p>
+
+</body>
+</html>
+</td></tr>
+</table>
+R;
+    fwrite($fl,$resoltxt);
+    fclose($fl);
+
     shell_exec("cd comisiones/$comisionid;$H2PDF resolucion-$comisionid.html resolucion-$comisionid.pdf &> pdf.log");
-    //*/
+    shell_exec("cd comisiones/$comisionid;$H2PDF resolucion-blank-$comisionid.html resolucion-blank-$comisionid.pdf &> pdf.log");
     $error=errorMessage("Resolución generada.");
   }
 
@@ -668,6 +762,16 @@ $reslink=<<<R
   </a>
   (<a href=comisiones/$comisionid/resolucion-$comisionid.pdf target="_blank">pdf</a>)
 R;
+ 
+ $extrares="";
+ if($qperm==2){
+   $extrares="<!-- -------------------------------------------------- -->
+    <a href=comisiones/$comisionid/resolucion-blank-$comisionid.html target='_blank'>
+      Resolución imprimible</a>
+  (<a href=comisiones/$comisionid/resolucion-blank-$comisionid.pdf target='_blank'>pdf imprimible</a>)
+";
+ }
+
   }else{
     $reslink="<i>Resolución no generada</i>";
   }
@@ -907,7 +1011,7 @@ encargará de sus responsabilidades durante su ausencia.</td>
 <tr class="discorta" $discortastyle>
 <td>Resolución:</td>
 <td>
-$reslink
+  $reslink, $extrares
 </td>
 </tr>
 <tr class=ayuda>
@@ -1070,6 +1174,7 @@ $table=<<<T
   <td width=40%>Solicitante</td>
   <td>Acciones</td>
   <td>Descargas</td>
+  <td>Otras</td>
 </tr>
 T;
   
@@ -1106,14 +1211,23 @@ T;
     if($qperm==2 and $taprobacion=="Si" and $ttipocomx!="corta"){
       $generar="<!-- -------------------------------------------------- -->
     <a href=?$USERSTRING&comisionid=$tcomisionid&operation=Resolucion&action=Consultar>
-      Generar</a> |";
+      Generar</a>";
     }
     if(file_exists("comisiones/$tcomisionid/resolucion-$tcomisionid.html")){
       $reslink="<!-- -------------------------------------------------- -->
     <a href=comisiones/$tcomisionid/resolucion-$tcomisionid.html target='_blank'>
       Resolucion</a>
-  (<a href=comisiones/$comisionid/resolucion-$comisionid.pdf target='_blank'>pdf</a>)
+  (<a href=comisiones/$comisionid/resolucion-$tcomisionid.pdf target='_blank'>pdf</a>)
 ";
+      $extrares="";
+      if($qperm==2){
+	$extrares="<!-- -------------------------------------------------- -->
+    <a href=comisiones/$tcomisionid/resolucion-blank-$tcomisionid.html target='_blank'>
+      Resolución imprimible</a>
+  (<a href=comisiones/$tcomisionid/resolucion-blank-$tcomisionid.pdf target='_blank'>pdf imprimible</a>)
+";
+      }
+      
     }else{
       $reslink="<i>No disponible</i>";
     }
@@ -1133,12 +1247,15 @@ $table.=<<<T
   <td>$tcedula, $tnombre</td>
   <td>
     $generar
-    <!-- -------------------------------------------------- -->
-    <a href=?$USERSTRING&comisionid=$tcomisionid&operation=Borrar&action=Consultar>
-      Borrar</a>
   </td>
   <td>
   $reslink
+  $extrares
+  </td>
+  <td>
+  <!-- -------------------------------------------------- -->
+  <a href=?$USERSTRING&comisionid=$tcomisionid&operation=Borrar&action=Consultar>
+  Borrar</a>
   </td>
 </tr>
 T;
@@ -1263,7 +1380,8 @@ T;
 $content.=<<<C
 $error
 <a href="?usercedula=$cedula&userpass=$userpass&action=Solicitar">Nueva Solicitud</a> | 
-<a href="?usercedula=$cedula&userpass=$userpass&action=Consultar">Consultar</a>
+<a href="?usercedula=$cedula&userpass=$userpass&action=Consultar">Consultar</a> |
+<a href="?$USERSTRING">Salir</a>
 <h2>Informes Completos</h2>
   <form method="GET">
   <input type="hidden" name="usercedula" value="$usercedula">
