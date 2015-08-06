@@ -64,7 +64,8 @@ if(!isBlank($out)){
   $qperm=1;
 }
 //CHECK DEAN
-if($usercedula==$DIRECTORS["decanatura"]){
+if($usercedula==$DIRECTORS["decanatura"] or
+   $usercedula=="71755174"){
   $qperm=2;
 }
 
@@ -139,7 +140,7 @@ if(isset($operation)){
 
     if($vistobueno=="Si"){
       $estado="vistobueno";
-    }else{
+    }else if($estado!="devuelta"){
       $estado="solicitada";
     }
 
@@ -153,10 +154,11 @@ if(isset($operation)){
     }else{
       if($vistobueno=="Si"){
 	$estado="vistobueno";
-      }else{
+      }else if($estado!="devuelta"){
 	$estado="solicitada";
       }
     }
+    if($qperm==0 and $estado=="devuelta"){$estado="solicitada";}
 
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     //GRABAR DATOS EN BASE DE DATOS
@@ -167,6 +169,7 @@ if(isset($operation)){
     $fval_comisiones="";
     foreach($FIELDS_COMISIONES as $field){
       $value=$$field;
+      //echo "$field, $value<br/>";
       $fields_comisiones.="$field,";
       $values_comisiones.="'$value',";
       $fval_comisiones.="$field='$value',";
@@ -212,23 +215,27 @@ if(isset($operation)){
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     //ENVIAR CORREO DE NOTIFICACION
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
     $qcopy=0;
     $out=mysqlCmd("select cedulajefe,emailinst from Institutos where institutoid='$institutoid'");
     $cedulajefeinst=$out[0];
     $emailinst=$out[1];
+    //echo "$cedulajefeinst,$emailinst<br/>";
+    //echo "qperm=$qperm,qnew=$qnew<br/>";
 
-    if($qperm>-1 and $qnew){
-      $out=mysqlCmd("select cedulajefe,emailinst from Institutos where institutoid='$institutoid'");
-      $cedulajefe=$out[0];
-      $emailcopia=$emailinst;
-      $qcopy=1;
-
-      $out=mysqlCmd("select email from Profesores where cedula='$cedulajefe'");
-      $emailjefe=$out[0];
-      $ttipocom=$TIPOSCOM[$tipocom];
-      $destino="Director";
-      
-      $subject="[Comisiones] Nueva solicitud de comisión que requiere visto bueno";
+    if($estado=="solicitada"){
+      if($qnew){
+	$out=mysqlCmd("select cedulajefe,emailinst from Institutos where institutoid='$institutoid'");
+	$cedulajefe=$out[0];
+	$emailcopia=$emailinst;
+	$qcopy=1;
+	
+	$out=mysqlCmd("select email from Profesores where cedula='$cedulajefe'");
+	$emailjefe=$out[0];
+	$ttipocom=$TIPOSCOM[$tipocom];
+	$destino="Director";
+	
+	$subject="[Comisiones] Nueva solicitud de comisión que requiere visto bueno";
 $message=<<<M
   Se&ntilde;or(a) Director(a),
 <p>
@@ -250,14 +257,13 @@ otorgue su visto bueno para continuar con el trámite.
 <b>Sistema de Solicitud de Comisiones<br/>
 Decanatura, FCEN</b>
 M;
-    }
-
-    if($vistobueno=="Si"){
+      }
+    }else if($estado=="vistobueno"){
       $out=mysqlCmd("select cedulajefe,emailinst from Institutos where institutoid='decanatura'");
       $cedulajefe=$out[0];
       $emailcopia=$out[1];
       $qcopy=1;
-
+      
       $out=mysqlCmd("select email from Profesores where cedula='$cedulajefe'");
       $emailjefe=$out[0];
       $destino="Decano";
@@ -277,15 +283,16 @@ aprobación continuar con el trámite.
 <b>Sistema de Solicitud de Comisiones<br/>
 Decanatura, FCEN</b>
 M;
-      $qnew=1;
-    }
+       $qnew=1;
+    }else if($estado=="aprobada"){
+      if(!file_exists("comisiones/$comisionid/.notified")){
+	echo "Creating notificaction file...<br/>";
+	shell_exec("date > comisiones/$comisionid/.notified");
 
-    if($aprobacion=="Si"){
-      $out=mysqlCmd("select email from Profesores where cedula='$cedulajefeinst'");
-      $emailcopia=$out[0];
-      $qcopy=1;
-
-      $emailjefe=$email;
+	$out=mysqlCmd("select email from Profesores where cedula='$cedulajefeinst'");
+	$emailcopia=$out[0];
+	$qcopy=1;
+	$emailjefe=$email;
 
 $restxt=<<<R
 El número de resolución de decanatura es el $resolucion de $fecharesolucion.
@@ -295,27 +302,27 @@ Para obtener una copia de la resolución de click en <a href="$URL/comisiones/$c
   En caso de que el enlace este roto (no se haya expedido la resolución) pregunte en la vicedecanatura por la misma o espere a que el link aparezca en el Sistema de Solicitudes.
 </p>
 R;
-      if($tipocom=="noremunerada"){
-	$restxt="";
-      }
-      echo "Tipo = $tipocom";
-
-      $subject="[Comisiones] Su solicitud de comisión/permiso ha sido aprobada";
+        if($tipocom=="noremunerada"){
+	  $restxt="";
+	}
+	$subject="[Comisiones] Su solicitud de comisión/permiso ha sido aprobada";
 $message=<<<M
   Se&ntilde;or(a) Profesor(a),
 <p>
-Su solicitud de comisión radicada en
+Su solicitud de comisión/permiso radicada en
 el <a href='bit.ly/fcen-comisiones'>Sistema de Solicitudes</a> en
 fecha $radicacion e identificada con número '$comisionid' ha sido
 aprobada.  $restxt
 <b>Sistema de Solicitud de Comisiones<br/>
 Decanatura, FCEN</b>
 M;
-      $qnew=1;
-    }
-
-    if($estado=="devuelta"){
-      $emailcopia=$emailinst;
+        $qnew=1;
+      }else{
+	$qnew=0;
+      }
+    }else if($estado=="devuelta"){
+      $out=mysqlCmd("select email from Profesores where cedula='$cedulajefeinst'");
+      $emailcopia=$out[0];
       $qcopy=1;
       $emailjefe=$email;
       $destino="Solicitante";
@@ -339,37 +346,6 @@ indicadas.
 Decanatura, FCEN</b>
 M;
       $qnew=1;
-    }
-
-    if(!file_exists("comisiones/$comisionid/.notified")){
-
-    if($aprobacion=="Si"){
-      shell_exec("touch comisiones/$comisionid/.notified");
-
-      $emailcopia=$emailinst;
-      $qcopy=1;
-
-      $emailjefe=$email;
-      $destino="Solicitante";
-      
-      $subject="[Comisiones] Su solicitud de comisión/permiso ha sido aprobada";
-$message=<<<M
-  Se&ntilde;or(a) Profesor(a),
-<p>
-Su solicitud de comisión radicada en
-el <a href='bit.ly/fcen-comisiones'>Sistema de Solicitudes</a> en
-fecha $radicacion e identificada con número '$comisionid' ha sido
-aprobada.  El número de resolución de decanatura es el $resolucion de $fecharesolucion.
-</p>
-<p>
-Para obtener una copia de la resolución vaya al sistema de
-solicitudes.
-</p>
-<b>Sistema de Solicitud de Comisiones<br/>
-Decanatura, FCEN</b>
-M;
-      $qnew=1;
-    }
     }else{
       $qnew=0;
     }
@@ -382,9 +358,13 @@ M;
       $headers.="MIME-Version: 1.0\r\n";
       $headers.="Content-type: text/html\r\n";
       $simulation="";
+      $randstr=generateRandomString(5);
+      $fl=fopen("log/mails/mail-$comisionid-$randstr.html","w");
+      fwrite($fl,"Subject: $subject<br/>\n>");
+      fwrite($fl,"Email: $emailjefe<br/>\n>");
+      fwrite($fl,"Message:<br/>\n$message\n<br/>\n");
+      fclose($fl);
       if($HOST!="localhost"){
-	
-
 	mail($emailjefe,$subject,$message,$headers);
 	if($qcopy){
 	  mail($emailcopia,"[Copia] ".$subject,$message,$headers);
@@ -766,7 +746,6 @@ if($action=="Solicitar"){
   //DEFAULT VALUES
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   $qnew=0;
-
   if(isBlank($radicacion)){
     $radicacion=$actualizacion;
     $qnew=1;
@@ -779,11 +758,14 @@ if($action=="Solicitar"){
   if(isBlank($actividad)){$actividad="Asistir al Nombre del Evento";}
   if(isBlank($aprobacion)){$aprobacion="No";}
   if(isBlank($vistobueno)){$vistobueno="No";}
+  if($estado=="devuelta"){$qnew=1;}
   
+  /*
   if($qperm==0 and $estado=="devuelta"){
     $qnew=1;
     $estado="solicitada";
   }
+  */
 
   if($aprobacion=="No"){
     $resolucion=shell_exec("tail -n 1 etc/resoluciones.txt")+1;
@@ -829,20 +811,26 @@ R;
   $disp1="";
   $disp2="";
   $disp3="";
+  $disp4="";
+  $tabcolor="white";
   if($qperm==0){
     $disp1="style='display:none'";
+    $disp4="style='display:none'";
   }
   if($qperm==1){
     $disp2="style='display:none'";
   }
+
   if($vistobueno=="Si"){
     $notification="<i style='color:blue'>Esta solicitud ya ha recibido visto bueno del director.</i>";
-    if($qperm==0){
+    $tabcolor="lightblue";
+    if($qperm<=1){
       $disp3="disabled";
     }
   }
   if($aprobacion=="Si"){
     $notification="<i style='color:blue'>Esta solicitud ya ha sido aprobada</i>";
+    $tabcolor="lightgreen";
     if($qperm<=1){
       $disp3="disabled";
     }
@@ -858,7 +846,7 @@ R;
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   //GENERATE TIPO
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  $estadosel=generateSelection($ESTADOS,"estado",$estado,$disabled="$disp3");
+  $estadosel=generateSelection($ESTADOS,"estado",$estado,$disabled="");
   $tiposel=generateSelection($TIPOS,"tipo",$tipo,$disabled="$disp3");
   $tipoidsel=generateSelection($TIPOSID,"tipoid",$tipoid,$disabled="$disp3");
   $instsel=generateSelection($INSTITUTOS,"institutoid",$institutoid,$disabled="$disp3");
@@ -867,7 +855,13 @@ R;
   $aprosel=generateSelection($SINO,"aprobacion",$aprobacion,$disabled="$disp3");
   $tipocomsel=generateSelection($TIPOSCOM,"tipocom",$tipocom,$disabled="$disp3 onchange='selectCorta(this)'");
   $diassel=generateSelection(array(1,2,3,4,5,6),"extra1",$extra1,$disabled="$disp3");
-  
+  $generar="
+  <a href=?$USERSTRING&comisionid=$comisionid&operation=Resolucion&action=Solicitar>
+    Generar
+  </a>";
+  if($tipocom=="noremunerada"){
+    $generar="<i>No Resolución</i>";
+  }
 
 $content.=<<<C
   <a href="?$USERSTRING&action=Consultar">Lista de Solicitudes</a> | <a href="?$USERSTRING">Salir</a>
@@ -878,7 +872,7 @@ $error
 <a href="JavaScript:void(null)" onclick="$('.ayuda').toggle('fast',null);" style="font-size:12px">Mostrar/Ocultar ayuda</a>
 <p></p>
 $notification
-<table width=600px>
+<table width=600px style="background:$tabcolor">
 <tr><td width=40%></td></td width=60%></tr>
 <!---------------------------------------------------------------------->
 <tr>
@@ -1108,7 +1102,7 @@ encargará de sus responsabilidades durante su ausencia.</td>
 solicitud.</td>
 </tr>
 <!---------------------------------------------------------------------->
-<tr $disp1 $disp2>
+<tr $disp1>
 <td>Estado:</td>
 <td>$estadosel</td>
 </tr>
@@ -1166,11 +1160,7 @@ comisión.</td>
 <!---------------------------------------------------------------------->
 <tr $disp2 class="discorta" $discortastyle>
 <td>Resolución:</td>
-<td>
-  <a href=?$USERSTRING&comisionid=$comisionid&operation=Resolucion&action=Solicitar>
-    Generar
-  </a>
-</td>
+<td>$generar</td>
 </tr>
 </table>
 <!---------------------------------------------------------------------->
@@ -1245,18 +1235,9 @@ T;
     $ttipocomx=$comision['tipocom'];
     $ttipocom=$TIPOSCOM[$ttipocomx];
 
-    if($ttipocomx=="corta"){
-      $estadocolor="pink";
-    }else{
-      $estadocolor="yellow";
-    }
-    if($testadox=="aprobada"){$estadocolor="lightgreen";}
-    if($testadox=="vistobueno"){
-      if($ttipocomx=="corta"){
-	$estadocolor="orange";
-      }else{
-	$estadocolor="lightblue";
-      }
+    $estadocolor=$COLORS[$testadox];
+    if($ttipocomx=="noremunerada"){
+      $estadocolor=$COLORS[$testadox."_noremunerada"];
     }
 
     $tradicacion=$comision['radicacion'];
@@ -1268,7 +1249,7 @@ T;
 
     $results=mysqlCmd("select nombre from Profesores where cedula='$tcedula'");
     $tnombre=$results[0];
-    if($qperm==2 and $taprobacion=="Si" and $ttipocomx!="corta"){
+    if($qperm==2 and $taprobacion=="Si" and $ttipocomx!="noremunerada"){
       $generar="<!-- -------------------------------------------------- -->
     <a href=?$USERSTRING&comisionid=$tcomisionid&operation=Resolucion&action=Consultar>
       Generar</a>";
@@ -1343,6 +1324,14 @@ $error
 <a href="?$USERSTRING&action=Consultar">Lista de Solicitudes</a> | <a href="?$USERSTRING">Salir</a>
 <h2>Lista de solicitudes.</h2>
   Número de solicitudes: $nsolicitudes
+<p></p>
+  <table border=0px><tr>
+  <td>Convenciones:</td>
+  <td style=background:#FFFF99>Comisión Solicitada</td>
+  <td style=background:#FFCC99>Permiso Solicitado</td>
+  <td style=background:#99CCFF>Visto Bueno</td>
+  <td style=background:#00CC99>Aprobada</td>
+  </tr></table>
 <p></p>
 $table
 <p></p>
