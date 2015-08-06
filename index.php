@@ -21,8 +21,11 @@ $content.=<<<C
   <script>
     function selectCorta(selection){
 	if($(selection).val().localeCompare("noremunerada")==0){
-	    $(".discorta").hide();
-	    $(".discortashow").show();
+	  $(".discorta").hide();
+	  $(".discortashow").show();
+	}else{
+	  $(".discorta").show();
+	  $(".discortashow").hide();
 	}
     }
   </script>
@@ -141,7 +144,7 @@ if(isset($operation)){
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     //
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    if($qperm==1 and $vistobueno=="Si" and $tipocom="noremunerada"){
+    if($qperm==1 and $vistobueno=="Si" and $tipocom=="noremunerada"){
       $parts=preg_split("/-/",$DATE);
       $year=$parts[0];
       if($year!=$ano){
@@ -307,7 +310,7 @@ M;
        $qnew=1;
     }else if($estado=="aprobada"){
       if(!file_exists("comisiones/$comisionid/.notified")){
-	echo "Creating notificaction file...<br/>";
+	//echo "Creating notificaction file...<br/>";
 	shell_exec("date > comisiones/$comisionid/.notified");
 
 	$out=mysqlCmd("select email from Profesores where cedula='$cedulajefeinst'");
@@ -632,7 +635,7 @@ R;
 
     shell_exec("cd comisiones/$comisionid;$H2PDF resolucion-$comisionid.html resolucion-$comisionid.pdf &> pdf.log");
     shell_exec("cd comisiones/$comisionid;$H2PDF resolucion-blank-$comisionid.html resolucion-blank-$comisionid.pdf &> pdf.log");
-    $error=errorMessage("Resolución generada.");
+    $error=errorMessage("Archivos de resolución $comisionid generados.");
   }
 
   //////////////////////////////////////////////////////////////
@@ -882,11 +885,14 @@ R;
   }
   $diassel=generateSelection($diasvec,"diaspermiso",$diaspermiso,$disabled="$disp3");
   $generar="
-  <a href=?$USERSTRING&comisionid=$comisionid&operation=Resolucion&action=Solicitar>
+  <a href=?$USERSTRING&comisionid=$comisionid&operation=Resolucion&action=Consultar>
     Generar
   </a>";
   if($tipocom=="noremunerada"){
     $generar="<i>No Resolución</i>";
+  }
+  if($aprobacion=="No"){
+    $generar="<i>No aprobada</i>";
   }
 
 $content.=<<<C
