@@ -38,7 +38,7 @@ for field in profesores["fields"]:
     if field!="pass":
         fieldsup+="%s=VALUES(%s),"%(field,field)
 fieldstxt+="extra1,extra2,"
-fieldsup+="extra1=VALUES(extra1),extra2=VALUES(extra2),"
+fieldsup+="extra2=VALUES(extra2),"
 fieldstxt=fieldstxt.strip(",")
 fieldsup=fieldsup.strip(",")
 fieldstxt+=")"
