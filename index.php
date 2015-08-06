@@ -65,7 +65,7 @@ if(!isBlank($out)){
 }
 //CHECK DEAN
 if($usercedula==$DIRECTORS["decanatura"] or
-   $usercedula=="71755174"){
+   $usercedula==$CEDULAMAINTAINANCE){
   $qperm=2;
 }
 
@@ -106,7 +106,7 @@ if(isset($operation)){
   //GUARDAR SOLICITUD
   //////////////////////////////////////////////////////////////
   if($operation=="Guardar"){
-
+    
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     //CREAR DIRECTORIO DE COMISION
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -138,6 +138,23 @@ if(isset($operation)){
       shell_exec("cp $tmp comisiones/$comisionid/'$name'");
     }
 
+    //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    //
+    //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if($qperm==1 and $vistobueno=="Si" and $tipocom="noremunerada"){
+      $parts=preg_split("/-/",$DATE);
+      $year=$parts[0];
+      if($year!=$ano){
+	$diasdisponible=6;
+	$ano=$year;
+      }else{
+	$diasdisponible=$diasdisponible-$diaspermiso;
+      }
+    }
+    
+    //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    //CHECK STATUS
+    //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     if($vistobueno=="Si"){
       $estado="vistobueno";
     }else if($estado!="devuelta"){
@@ -168,12 +185,14 @@ if(isset($operation)){
     $values_comisiones="";
     $fval_comisiones="";
     foreach($FIELDS_COMISIONES as $field){
+      $fieldn=$field;
+      if($field=="extra1"){$field="diaspermiso";}
       $value=$$field;
       //echo "$field, $value<br/>";
-      $fields_comisiones.="$field,";
+      $fields_comisiones.="$fieldn,";
       $values_comisiones.="'$value',";
-      $fval_comisiones.="$field='$value',";
-      fwrite($fl,"$field = $value\n");
+      $fval_comisiones.="$fieldn='$value',";
+      fwrite($fl,"$fieldn = $value\n");
     }
     $fields_comisiones=trim($fields_comisiones,",");
     $values_comisiones=trim($values_comisiones,",");
@@ -183,11 +202,14 @@ if(isset($operation)){
     $values_profesores="";
     $fval_profesores="";
     foreach($FIELDS_PROFESORES as $field){
+      $fieldn=$field;
+      if($field=="extra1"){$field="diasdisponible";}
+      if($field=="extra2"){$field="ano";}
       $value=$$field;
-      $fields_profesores.="$field,";
+      $fields_profesores.="$fieldn,";
       $values_profesores.="'$value',";
-      $fval_profesores.="$field='$value',";
-      fwrite($fl,"$field = $value\n");
+      $fval_profesores.="$fieldn='$value',";
+      fwrite($fl,"$fieldn = $value\n");
     }
     $fields_profesores=trim($fields_profesores,",");
     $values_profesores=trim($values_profesores,",");
@@ -215,7 +237,6 @@ if(isset($operation)){
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     //ENVIAR CORREO DE NOTIFICACION
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
     $qcopy=0;
     $out=mysqlCmd("select cedulajefe,emailinst from Institutos where institutoid='$institutoid'");
     $cedulajefeinst=$out[0];
@@ -658,7 +679,10 @@ if(isset($usercedula) and isset($userpass)){
     if($userpass==$profesor["pass"]){
       foreach(array_keys($profesor) as $field){
 	if(preg_match("/^\d+$/",$field)){continue;}
-	$$field=$profesor[$field];
+	$fieldn=$field;
+	if($field=="extra1"){$field="diasdisponible";}
+	if($field=="extra2"){$field="ano";}
+	$$field=$profesor[$fieldn];
       }
     }else{
       $error=errorMessage("Contraseña equivocada o recientemente cambiada");
@@ -723,18 +747,23 @@ if($action=="Solicitar"){
     $results=mysqlCmd("select * from Comisiones where comisionid='$comisionid'");
     foreach($FIELDS_COMISIONES as $field){
       //$$field=utf8_encode($results[$field]);
-      $$field=$results[$field];
+      $fieldn=$field;
+      if($field=="extra1"){$field="diaspermiso";}
+      $$field=$results[$fieldn];
     }
     $results=mysqlCmd("select * from Profesores where cedula='$cedula'");
     foreach($FIELDS_PROFESORES as $field){
       //$$field=utf8_encode($results[$field]);
-      $$field=$results[$field];
+      $fieldn=$field;
+      if($field=="extra1"){$field="diasdisponible";}
+      if($field=="extra2"){$field="ano";}
+      $$field=$results[$fieldn];
     }
     foreach($TEXTS as $text){
       $$text=shell_exec("cat comisiones/$comisionid/$text.txt");
     }
     $error=errorMessage("Solicitud $comisionid cargada");
-  }    
+  }  
 
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   //FECHA
@@ -760,13 +789,6 @@ if($action=="Solicitar"){
   if(isBlank($vistobueno)){$vistobueno="No";}
   if($estado=="devuelta"){$qnew=1;}
   
-  /*
-  if($qperm==0 and $estado=="devuelta"){
-    $qnew=1;
-    $estado="solicitada";
-  }
-  */
-
   if($aprobacion=="No"){
     $resolucion=shell_exec("tail -n 1 etc/resoluciones.txt")+1;
     setlocale(LC_TIME,"");
@@ -854,7 +876,11 @@ R;
   $vobosel=generateSelection($SINO,"vistobueno",$vistobueno,$disabled="$disp3");
   $aprosel=generateSelection($SINO,"aprobacion",$aprobacion,$disabled="$disp3");
   $tipocomsel=generateSelection($TIPOSCOM,"tipocom",$tipocom,$disabled="$disp3 onchange='selectCorta(this)'");
-  $diassel=generateSelection(array(1,2,3,4,5,6),"extra1",$extra1,$disabled="$disp3");
+  $diasvec=array();
+  for($i=1;$i<=$diasdisponible;$i++){
+    $diasvec["$i"]=$i;
+  }
+  $diassel=generateSelection($diasvec,"diaspermiso",$diaspermiso,$disabled="$disp3");
   $generar="
   <a href=?$USERSTRING&comisionid=$comisionid&operation=Resolucion&action=Solicitar>
     Generar
@@ -966,11 +992,25 @@ comisión.</td>
 </tr>
 <!---------------------------------------------------------------------->
 <tr class="discortashow" $discortashowstyle>
+<td>
+Días disponibles (año $ano):
+<input type="hidden" name="ano" value="$ano">
+</td>
+<td>
+$diasdisponible
+<input type="hidden" name="diasdisponible" value="$diasdisponible">
+</td>
+</tr>
+<tr class=ayuda>
+<td colspan=2>Número de días restantes para este año.</td>
+</tr>
+<!---------------------------------------------------------------------->
+<tr class="discortashow" $discortashowstyle>
 <td>Número de Días:</td>
 <td>$diassel</td>
 </tr>
 <tr class=ayuda>
-<td colspan=2>Indique ciudad(es), país(es).</td>
+<td colspan=2>Duración del permiso.</td>
 </tr>
 <!---------------------------------------------------------------------->
 <tr class="discorta" $discortastyle>

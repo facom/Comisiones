@@ -37,10 +37,13 @@ for field in profesores["fields"]:
     fieldstxt+="%s,"%field
     if field!="pass":
         fieldsup+="%s=VALUES(%s),"%(field,field)
+fieldstxt+="extra1,extra2,"
+fieldsup+="extra1=VALUES(extra1),extra2=VALUES(extra2),"
 fieldstxt=fieldstxt.strip(",")
 fieldsup=fieldsup.strip(",")
 fieldstxt+=")"
 
+year=str(date.today()).split("-")[0]
 for cedula in profesores.keys():
     sql=""
     if cedula=='fields':continue
@@ -49,6 +52,7 @@ for cedula in profesores.keys():
     sql+=" values ("
     for field in profesores["fields"]:
         sql+="'%s',"%profesor[field]
+    sql+="'6','%s',"%year
     sql=sql.strip(",")
     sql+=") on duplicate key update %s;\n"%fieldsup
     db.execute(sql)
