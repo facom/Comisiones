@@ -4,6 +4,7 @@ $content="";
 ////////////////////////////////////////////////////////////////////////
 //LOAD CONFIGURATION
 ////////////////////////////////////////////////////////////////////////
+$HOST=$_SERVER["HTTP_HOST"];
 $SCRIPTNAME=$_SERVER["SCRIPT_FILENAME"];
 $ROOTDIR=rtrim(shell_exec("dirname $SCRIPTNAME"));
 require("$ROOTDIR/etc/configuration.php");
@@ -19,8 +20,9 @@ $content.=<<<C
 
   <script>
     function selectCorta(selection){
-	if($(selection).val().localeCompare("corta")==0){
+	if($(selection).val().localeCompare("noremunerada")==0){
 	    $(".discorta").hide();
+	    $(".discortashow").show();
 	}
     }
   </script>
@@ -143,7 +145,7 @@ if(isset($operation)){
 
     if($aprobacion=="Si"){
       $estado="aprobada";
-      if($tipocom!="corta"){
+      if($tipocom!="noremunerada"){
 	shell_exec("echo $resolucion >> etc/resoluciones.txt");
       }else{
 	$resolucion="99999";
@@ -210,9 +212,17 @@ if(isset($operation)){
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     //ENVIAR CORREO DE NOTIFICACION
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    $qcopy=0;
+    $out=mysqlCmd("select cedulajefe,emailinst from Institutos where institutoid='$institutoid'");
+    $cedulajefeinst=$out[0];
+    $emailinst=$out[1];
+
     if($qperm>-1 and $qnew){
-      $out=mysqlCmd("select cedulajefe from Institutos where institutoid='$institutoid'");
+      $out=mysqlCmd("select cedulajefe,emailinst from Institutos where institutoid='$institutoid'");
       $cedulajefe=$out[0];
+      $emailcopia=$emailinst;
+      $qcopy=1;
+
       $out=mysqlCmd("select email from Profesores where cedula='$cedulajefe'");
       $emailjefe=$out[0];
       $ttipocom=$TIPOSCOM[$tipocom];
@@ -243,8 +253,11 @@ M;
     }
 
     if($vistobueno=="Si"){
-      $out=mysqlCmd("select cedulajefe from Institutos where institutoid='decanatura'");
+      $out=mysqlCmd("select cedulajefe,emailinst from Institutos where institutoid='decanatura'");
       $cedulajefe=$out[0];
+      $emailcopia=$out[1];
+      $qcopy=1;
+
       $out=mysqlCmd("select email from Profesores where cedula='$cedulajefe'");
       $emailjefe=$out[0];
       $destino="Decano";
@@ -268,6 +281,10 @@ M;
     }
 
     if($aprobacion=="Si"){
+      $out=mysqlCmd("select email from Profesores where cedula='$cedulajefeinst'");
+      $emailcopia=$out[0];
+      $qcopy=1;
+
       $emailjefe=$email;
 
 $restxt=<<<R
@@ -278,12 +295,12 @@ Para obtener una copia de la resolución de click en <a href="$URL/comisiones/$c
   En caso de que el enlace este roto (no se haya expedido la resolución) pregunte en la vicedecanatura por la misma o espere a que el link aparezca en el Sistema de Solicitudes.
 </p>
 R;
-      if($tipocom=="corta"){
+      if($tipocom=="noremunerada"){
 	$restxt="";
       }
       echo "Tipo = $tipocom";
 
-      $subject="[Comisiones] Su solicitud de comisión ha sido aprobada";
+      $subject="[Comisiones] Su solicitud de comisión/permiso ha sido aprobada";
 $message=<<<M
   Se&ntilde;or(a) Profesor(a),
 <p>
@@ -298,10 +315,12 @@ M;
     }
 
     if($estado=="devuelta"){
+      $emailcopia=$emailinst;
+      $qcopy=1;
       $emailjefe=$email;
       $destino="Solicitante";
       
-      $subject="[Comisiones] Su solicitud de comisión ha sido devuelta.";
+      $subject="[Comisiones] Su solicitud de comisión/permiso ha sido devuelta.";
 $message=<<<M
   Se&ntilde;or(a) Decano(a),
 <p>
@@ -323,12 +342,17 @@ M;
     }
 
     if(!file_exists("comisiones/$comisionid/.notified")){
+
     if($aprobacion=="Si"){
       shell_exec("touch comisiones/$comisionid/.notified");
+
+      $emailcopia=$emailinst;
+      $qcopy=1;
+
       $emailjefe=$email;
       $destino="Solicitante";
       
-      $subject="[Comisiones] Su solicitud de comisión ha sido aprobada";
+      $subject="[Comisiones] Su solicitud de comisión/permiso ha sido aprobada";
 $message=<<<M
   Se&ntilde;or(a) Profesor(a),
 <p>
@@ -349,6 +373,7 @@ M;
     }else{
       $qnew=0;
     }
+
     if($qnew){
       $headers="";
       $headers.="From: noreply@udea.edu.co\r\n";
@@ -356,8 +381,20 @@ M;
       $headers.="MIME-Version: 1.0\r\n";
       $headers.="MIME-Version: 1.0\r\n";
       $headers.="Content-type: text/html\r\n";
-      mail($emailjefe,$subject,$message,$headers);
-      $error.=errorMessage("Notificación enviada a $destino $emailjefe.");
+      $simulation="";
+      if($HOST!="localhost"){
+	
+
+	mail($emailjefe,$subject,$message,$headers);
+	if($qcopy){
+	  mail($emailcopia,"[Copia] ".$subject,$message,$headers);
+	}
+      }
+      else{$simulation="(simulación)";}
+      $error.=errorMessage("Notificación enviada a $destino $emailjefe. $simulation");
+      if($qcopy){
+	$error.=errorMessage("Una copia ha sido enviada también a $emailcopia. $simulation");
+      }
     }
 
   }//End Guardar
@@ -812,8 +849,10 @@ R;
   }
   
   $discortastyle="";
-  if($tipocom=="corta"){
+  $discortashowstyle="style='display:none'";
+  if($tipocom=="noremunerada"){
     $discortastyle="style='display:none'";
+    $discortashowstyle="";
   }
 
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -827,6 +866,8 @@ R;
   $vobosel=generateSelection($SINO,"vistobueno",$vistobueno,$disabled="$disp3");
   $aprosel=generateSelection($SINO,"aprobacion",$aprobacion,$disabled="$disp3");
   $tipocomsel=generateSelection($TIPOSCOM,"tipocom",$tipocom,$disabled="$disp3 onchange='selectCorta(this)'");
+  $diassel=generateSelection(array(1,2,3,4,5,6),"extra1",$extra1,$disabled="$disp3");
+  
 
 $content.=<<<C
   <a href="?$USERSTRING&action=Consultar">Lista de Solicitudes</a> | <a href="?$USERSTRING">Salir</a>
@@ -928,6 +969,14 @@ comisión.</td>
 </tr>
 <tr class=ayuda>
 <td colspan=2>Indique el tipo de comisión solicitada.</td>
+</tr>
+<!---------------------------------------------------------------------->
+<tr class="discortashow" $discortashowstyle>
+<td>Número de Días:</td>
+<td>$diassel</td>
+</tr>
+<tr class=ayuda>
+<td colspan=2>Indique ciudad(es), país(es).</td>
 </tr>
 <!---------------------------------------------------------------------->
 <tr class="discorta" $discortastyle>

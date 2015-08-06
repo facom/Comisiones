@@ -19,7 +19,7 @@ content=csv.DictReader(csvfile,dialect="excel",delimiter=";")
 profesores=dict()
 for row in content:
     cedula=row['cedula']
-    if cedula=="":continue
+    if cedula=='':continue
     profesores['fields']=row.keys()
     profesores[cedula]=dict()
     row["pass"]=row["cedula"]
