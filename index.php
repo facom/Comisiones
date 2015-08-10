@@ -388,10 +388,10 @@ M;
       fwrite($fl,"Email: $emailjefe<br/>\n>");
       fwrite($fl,"Message:<br/>\n$message\n<br/>\n");
       fclose($fl);
-      if($HOST!="localhost"){
-	mail($emailjefe,$subject,$message,$headers);
+      if($HOST!="localhosti"){
+      	sendMail($emailjefe,$subject,$message,$headers);
 	if($qcopy){
-	  mail($emailcopia,"[Copia] ".$subject,$message,$headers);
+	  sendMail($emailcopia,"[Copia] ".$subject,$message,$headers);
 	}
       }
       else{$simulation="(simulación)";}
