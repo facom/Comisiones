@@ -1295,6 +1295,9 @@ T;
 
     $results=mysqlCmd("select nombre from Profesores where cedula='$tcedula'");
     $tnombre=$results[0];
+    $generar="";
+    $reslink="";
+    $extrares="";
     if($qperm==2 and $taprobacion=="Si" and $ttipocomx!="noremunerada"){
       $generar="<!-- -------------------------------------------------- -->
     <a href=?$USERSTRING&comisionid=$tcomisionid&operation=Resolucion&action=Consultar>
@@ -1304,7 +1307,7 @@ T;
       $reslink="<!-- -------------------------------------------------- -->
     <a href=comisiones/$tcomisionid/resolucion-$tcomisionid.html target='_blank'>
       Resolucion</a>
-  (<a href=comisiones/$comisionid/resolucion-$tcomisionid.pdf target='_blank'>pdf</a>)
+  (<a href=comisiones/$tcomisionid/resolucion-$tcomisionid.pdf target='_blank'>pdf</a>)
 ";
       $extrares="";
       if($qperm==2){
@@ -1376,7 +1379,8 @@ $error
   <td style=background:#FFFF99>Comisión Solicitada</td>
   <td style=background:#FFCC99>Permiso Solicitado</td>
   <td style=background:#99CCFF>Visto Bueno</td>
-  <td style=background:#00CC99>Aprobada</td>
+  <td style=background:#00CC99>Comisión Aprobada</td>
+  <td style=background:#33CCCC>Permiso Aprobado</td>
   </tr></table>
 <p></p>
 $table
