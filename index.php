@@ -375,6 +375,7 @@ M;
     }
 
     if($qnew){
+      $emailcco=$EMAIL_USERNAME;
       $headers="";
       $headers.="From: noreply@udea.edu.co\r\n";
       $headers.="Reply-to: noreply@udea.edu.co\r\n";
@@ -386,12 +387,14 @@ M;
       $fl=fopen("log/mails/mail-$comisionid-$randstr.html","w");
       fwrite($fl,"Subject: $subject<br/>\n>");
       fwrite($fl,"Email: $emailjefe<br/>\n>");
+      fwrite($fl,"Copia: $emailcopia, <br/>\n>");
       fwrite($fl,"Message:<br/>\n$message\n<br/>\n");
       fclose($fl);
       if($HOST!="localhost"){
       	sendMail($emailjefe,$subject,$message,$headers);
 	if($qcopy){
 	  sendMail($emailcopia,"[Copia] ".$subject,$message,$headers);
+	  sendMail($emailcco,"[Historico] ".$subject,$message,$headers);
 	}
       }
       else{$simulation="(simulación)";}
