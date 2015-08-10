@@ -61,6 +61,7 @@ $error="";
 
 //BASIC PERMISSION
 $qperm=0;
+$qmant=0;
 //CHECK DIRECTOR
 $out=array_search($usercedula,$DIRECTORS);
 if(!isBlank($out)){
@@ -70,6 +71,9 @@ if(!isBlank($out)){
 if($usercedula==$DIRECTORS["decanatura"] or
    $usercedula==$CEDULAMAINTAINANCE){
   $qperm=2;
+  if($usercedula==$CEDULAMAINTAINANCE){
+    $qmant=1;
+  } 
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -735,6 +739,7 @@ C;
   if(!isBlank($error)){goto footer;}
  }else{
   $permisos=$PERMISOS[$qperm];
+  if($qmant){$permisos.=" (Mantenimiento)";}
 $content.=<<<C
   <i style=font-size:10px>Esta conectado como <b>$nombre ($usercedula)</b>, Permisos: $permisos</i>
 <hr/>
