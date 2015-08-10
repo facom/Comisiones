@@ -100,6 +100,7 @@ function sendMail($email,$subject,$message,$headers="")
   $mail->addReplyTo($mail->Username, 'Sistema de Solicitud de Comisiones FCEN/UdeA');
   $mail->addAddress($email,"Destinatario");
   $mail->Subject=$subject;
+  $mail->CharSet="UTF-8";
   $mail->Body=$message;
   $mail->IsHTML(true);
   if(!($status=$mail->send())) {
