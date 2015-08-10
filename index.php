@@ -388,7 +388,7 @@ M;
       fwrite($fl,"Email: $emailjefe<br/>\n>");
       fwrite($fl,"Message:<br/>\n$message\n<br/>\n");
       fclose($fl);
-      if($HOST!="localhosti"){
+      if($HOST!="localhost"){
       	sendMail($emailjefe,$subject,$message,$headers);
 	if($qcopy){
 	  sendMail($emailcopia,"[Copia] ".$subject,$message,$headers);
