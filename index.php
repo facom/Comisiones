@@ -394,8 +394,30 @@ M;
       fwrite($fl,"Copia: $emailcopia, <br/>\n>");
       fwrite($fl,"Message:<br/>\n$message\n<br/>\n");
       fclose($fl);
+
+      //SEND MESSAGE TO USER
+      $emailuser=$email;
+      $estadoactual=$ESTADOS[$estado];
+      $subjectactual="[Comisiones] Actualización de Solicitud de Comisión/Permiso $comisionid";
+$messageactual=<<<M
+  Se&ntilde;or(a) Profesor(a),
+<p>
+Su solicitud de comisión/permiso radicada en
+el <a href='bit.ly/fcen-comisiones'>Sistema de Solicitudes</a> en
+fecha $radicacion e identificada con número '$comisionid' ha sido
+actualizada.
+</p>
+<p>
+Estado: $estadoactual<br/>
+Fecha de actualización: $actualizacion.
+</p>
+<b>Sistema de Solicitud de Comisiones<br/>
+Decanatura, FCEN</b>
+M;
+
       if($HOST!="localhost"){
       	sendMail($emailjefe,$subject,$message,$headers);
+	sendMail($emailuser,$subjectactual,$messageactual);
 	if($qcopy){
 	  sendMail($emailcopia,"[Copia] ".$subject,$message,$headers);
 	  sendMail($emailcco,"[Historico] ".$subject,$message,$headers);
@@ -407,7 +429,6 @@ M;
 	$error.=errorMessage("Una copia ha sido enviada también a $emailcopia. $simulation");
       }
     }
-
   }//End Guardar
 
   //////////////////////////////////////////////////////////////
