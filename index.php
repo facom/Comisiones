@@ -745,7 +745,7 @@ $error
     <td>
       Ingrese su contraseña:<br/>
     </td>
-    <td><input type="password" name="userpass" value="$userpass" size=11 maxlength=11></td>
+    <td><input type="password" name="userpass" value="$userpass" size=20></td>
   </tr>
   <tr>
     <td colspan=2>
