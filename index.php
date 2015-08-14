@@ -1368,7 +1368,7 @@ $table.=<<<T
     </a>
   </td>
   <td>$tradicacion</td>
-  <td>$tactualizacion<br/>Usuario:$actualiza</td>
+  <td>$tactualizacion<br/>Usuario:$tactualiza</td>
   <td>$ttipocom</td>
   <td>$testado</td>
   <td>$tinstituto</td>
