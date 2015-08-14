@@ -62,6 +62,12 @@ $error="";
 //BASIC PERMISSION
 $qperm=0;
 $qmant=0;
+
+//CHECK MAINTAINANCE
+$out=array_search($usercedula,$MAINTAINANCE);
+if(!isBlank($out)){
+  $qmant=1;
+}
 //CHECK DIRECTOR
 $out=array_search($usercedula,$DIRECTORS);
 if(!isBlank($out)){
@@ -69,11 +75,8 @@ if(!isBlank($out)){
 }
 //CHECK DEAN
 if($usercedula==$DIRECTORS["decanatura"] or
-   $usercedula==$CEDULAMAINTAINANCE){
+   $qmant){
   $qperm=2;
-  if($usercedula==$CEDULAMAINTAINANCE){
-    $qmant=1;
-  } 
 }
 
 ////////////////////////////////////////////////////////////////////////
