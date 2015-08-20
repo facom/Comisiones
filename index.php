@@ -8,6 +8,7 @@ $HOST=$_SERVER["HTTP_HOST"];
 $SCRIPTNAME=$_SERVER["SCRIPT_FILENAME"];
 $ROOTDIR=rtrim(shell_exec("dirname $SCRIPTNAME"));
 require("$ROOTDIR/etc/configuration.php");
+
 ////////////////////////////////////////////////////////////////////////
 //HEADER
 ////////////////////////////////////////////////////////////////////////
@@ -174,7 +175,11 @@ if(isset($operation)){
     if($aprobacion=="Si"){
       $estado="aprobada";
       if($tipocom!="noremunerada"){
-	shell_exec("echo $resolucion >> etc/resoluciones.txt");
+	//shell_exec("echo $resolucion >> etc/resoluciones.txt");
+	$resolucion=$result["Auto_increment"];
+	$sql="insert into Resoluciones (comisionid) values ('$comisionid');";
+	mysqlCmd($sql);
+	$result=mysqlCmd("show table status where Name='Resoluciones';",$qout=0,$qlog=0);
       }else{
 	$resolucion="99999";
       }
@@ -835,7 +840,9 @@ if($action=="Solicitar"){
   if($estado=="devuelta"){$qnew=1;}
   
   if($aprobacion=="No"){
-    $resolucion=shell_exec("tail -n 1 etc/resoluciones.txt")+1;
+    //$resolucion=shell_exec("tail -n 1 etc/resoluciones.txt")+1;
+    $result=mysqlCmd("show table status where Name='Resoluciones';",$qout=0,$qlog=0);
+    $resolucion=$result["Auto_increment"];
     setlocale(LC_TIME,"");
     setlocale(LC_TIME,"es_ES.UTF-8") or setlocale(LC_TIME,"es_ES");
     $fecharesolucion=strftime("%d de %B de %Y");
@@ -1102,7 +1109,7 @@ vicerrectoría de docencia.</td>
 <tr>
 <td>Justificación:</td>
 <td>
-<textarea name="presentacion" cols=30 rows=10>$presentacion</textarea>
+<textarea $disp3 name="presentacion" cols=30 rows=10>$presentacion</textarea>
 </td>
 </tr>
 <tr class=ayuda>
@@ -1215,7 +1222,7 @@ del director pero espera aprobación de Decano), Aprobada por Decano
 <!---------------------------------------------------------------------->
 <tr $disp2 class="discorta" $discortastyle>
 <td>Número de Resolucion:</td>
-<td><input $disp3 type="text" name="resolucion" value="$resolucion" size=11></td>
+<td><input $disp3 readonly type="text" name="resolucion" value="$resolucion" size=11></td>
 </tr>
 <tr class=ayuda>
 <td colspan=2>El número solo se asigna una vez se ha aprobado la
