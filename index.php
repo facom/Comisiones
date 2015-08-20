@@ -62,6 +62,12 @@ $error="";
 //BASIC PERMISSION
 $qperm=0;
 $qmant=0;
+
+//CHECK MAINTAINANCE
+$out=array_search($usercedula,$MAINTAINANCE);
+if(!isBlank($out)){
+  $qmant=1;
+}
 //CHECK DIRECTOR
 $out=array_search($usercedula,$DIRECTORS);
 if(!isBlank($out)){
@@ -69,11 +75,8 @@ if(!isBlank($out)){
 }
 //CHECK DEAN
 if($usercedula==$DIRECTORS["decanatura"] or
-   $usercedula==$CEDULAMAINTAINANCE){
+   $qmant){
   $qperm=2;
-  if($usercedula==$CEDULAMAINTAINANCE){
-    $qmant=1;
-  } 
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -752,7 +755,7 @@ $error
     <td>
       Ingrese su contraseña:<br/>
     </td>
-    <td><input type="password" name="userpass" value="$userpass" size=11 maxlength=11></td>
+    <td><input type="password" name="userpass" value="$userpass" size=20></td>
   </tr>
   <tr>
     <td colspan=2>
@@ -1377,7 +1380,7 @@ $table.=<<<T
     </a>
   </td>
   <td>$tradicacion</td>
-  <td>$tactualizacion<br/>Usuario:$actualiza</td>
+  <td>$tactualizacion<br/>Usuario:$tactualiza</td>
   <td>$ttipocom</td>
   <td>$testado</td>
   <td>$tinstituto</td>
