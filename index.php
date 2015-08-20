@@ -175,6 +175,15 @@ if(isset($operation)){
       }else{
 	$resolucion="99999";
       }
+      if(!file_exists("comisiones/$comisionid/resolucion-$comisionid.pdf")){
+	$target="comisiones/$comisionid/resolucion-$comisionid";
+	$targetblank="comisiones/$comisionid/resolucion-blank-$comisionid";
+	shell_exec("cp etc/resolucion-blank.html $target.html");
+	shell_exec("cp etc/resolucion-blank.pdf $target.pdf");
+	shell_exec("cp etc/resolucion-blank.html $targetblank.html");
+	shell_exec("cp etc/resolucion-blank.pdf $targetblank.pdf");
+	shell_exec("touch comisiones/$comisionid/.nogen");
+      }	
     }else{
       if($vistobueno=="Si"){
 	$estado="vistobueno";
@@ -663,6 +672,7 @@ R;
 
     shell_exec("cd comisiones/$comisionid;$H2PDF resolucion-$comisionid.html resolucion-$comisionid.pdf &> pdf.log");
     shell_exec("cd comisiones/$comisionid;$H2PDF resolucion-blank-$comisionid.html resolucion-blank-$comisionid.pdf &> pdf.log");
+    shell_exec("rm comisiones/$comisionid/.nogen");
     $error=errorMessage("Archivos de resolución $comisionid generados.");
   }
 
@@ -837,7 +847,8 @@ if($action=="Solicitar"){
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   //CHECK RESOLUTION
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  if(file_exists("comisiones/$comisionid/resolucion-$comisionid.html")){
+  if(file_exists("comisiones/$comisionid/resolucion-$comisionid.html") and
+     !file_exists("comisiones/$comisionid/.nogen")){
 $reslink=<<<R
   <a href=comisiones/$comisionid/resolucion-$comisionid.html target="_blank">
     Resolucion
@@ -1332,7 +1343,8 @@ T;
     <a href=?$USERSTRING&comisionid=$tcomisionid&operation=Resolucion&action=Consultar>
       Generar</a>";
     }
-    if(file_exists("comisiones/$tcomisionid/resolucion-$tcomisionid.html")){
+    if(file_exists("comisiones/$tcomisionid/resolucion-$tcomisionid.html") and
+       !file_exists("comisiones/$tcomisionid/.nogen")){
       $reslink="<!-- -------------------------------------------------- -->
     <a href=comisiones/$tcomisionid/resolucion-$tcomisionid.html target='_blank'>
       Resolucion</a>
