@@ -44,7 +44,7 @@ $content.=<<<C
 <td width=10%><image src="$LOGOUDEA/udea_fcen.jpg"/ height=120px></td>
 <td valign=bottom>
   <b style='font-size:32'><a href=index.php?$USERSTRING>Solicitud de Comisiones</a></b><br/>
-  <b style='font-size:24'>Decanatura</b><br/>
+  <b style='font-size:24'>Decanato</b><br/>
   <b style='font-size:24'>Facultad de Ciencias Exactas y Naturales</b><br/>
   <b style='font-size:24'>Universidad de Antioquia</b><br/>
 </td>
@@ -300,7 +300,7 @@ Por favor evalue la solicitud y en caso de ser necesario
 otorgue su visto bueno para continuar con el trámite.
 </p>
 <b>Sistema de Solicitud de Comisiones<br/>
-Decanatura, FCEN</b>
+Decanato, FCEN</b>
 M;
       }
     }else if($estado=="vistobueno"){
@@ -326,7 +326,7 @@ Por favor evalue la solicitud y en caso de ser necesario otorgue su
 aprobación continuar con el trámite.
 </p>
 <b>Sistema de Solicitud de Comisiones<br/>
-Decanatura, FCEN</b>
+Decanato, FCEN</b>
 M;
        $qnew=1;
     }else if($estado=="aprobada"){
@@ -359,7 +359,7 @@ el <a href='bit.ly/fcen-comisiones'>Sistema de Solicitudes</a> en
 fecha $radicacion e identificada con número '$comisionid' ha sido
 aprobada.  $restxt
 <b>Sistema de Solicitud de Comisiones<br/>
-Decanatura, FCEN</b>
+Decanato, FCEN</b>
 M;
         $qnew=1;
       }else{
@@ -388,7 +388,7 @@ Vaya al sistema y modifique la solicitud de acuerdo a las sugerencias
 indicadas.
 </p>
 <b>Sistema de Solicitud de Comisiones<br/>
-Decanatura, FCEN</b>
+Decanato, FCEN</b>
 M;
       $qnew=1;
     }else{
@@ -429,7 +429,7 @@ Estado: $estadoactual<br/>
 Fecha de actualización: $actualizacion.
 </p>
 <b>Sistema de Solicitud de Comisiones<br/>
-Decanatura, FCEN</b>
+Decanato, FCEN</b>
 M;
 
       if($HOST!="localhost"){
