@@ -1555,12 +1555,12 @@ $error
   </form>
 <a href="JavaScript:void(null)"
    onclick="$('#ejemplos').toggle('fast',null);">Ejemplos</a><br/>
-<table id="ejemplos" border=0px style="margin-left:10px;font-size:12px;display:none;color:blue;">
+<table id="ejemplos" border=0px style="margin-left:10px;font-size:12px;display:block;color:blue;">
   <tr>
     <td>
       Muestre todas las comisiones presentadas a la fecha:<br/>
       <pre>
-	select * from Comisiones
+	* from Comisiones
       </pre>
     </td>
   </tr>
@@ -1568,10 +1568,50 @@ $error
     <td>
       Muestre las comisiones presentadas por la cedula 71755174:<br/>
       <pre>
-	select * from Comisiones where cedula='71755174'
+	* from Comisiones where cedula='71755174'
       </pre>
     </td>
   </tr>
+
+  <tr>
+    <td>
+      Muestre todos los permisos:<br/>
+      <pre>
+	* from Comisiones where tipocom='noremunerada'
+      </pre>
+    </td>
+  </tr>
+
+  <tr>
+    <td>
+      Muestre todos las comisiones en idioma inglés:<br/>
+      <pre>
+	* from Comisiones where idioma='Inglés'
+      </pre>
+    </td>
+  </tr>
+
+  <tr>
+    <td>
+      Muestre todos las comisiones aprobadas después del 15 de agosto:<br/>
+      <pre>
+	* from Comisiones where actualizacion>'2015-08-15'
+      </pre>
+    </td>
+  </tr>
+
+  <tr>
+    <td>
+
+      Muestre todos las comisiones aprobadas después del 15 de agosto
+      y antes del 20 de agosto:<br/>
+
+      <pre>
+	* from Comisiones where actualizacion>='2015-08-15' and actualizacion<'2015-08-20'
+      </pre>
+    </td>
+  </tr>
+
 </table>
 <p></p>
 $table
