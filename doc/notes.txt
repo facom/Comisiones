@@ -1,0 +1,7 @@
+Notas:
+
+- Para fijar el contador de resoluciones:
+
+    ALTER TABLE Resoluciones AUTO_INCREMENT=11607
+
+  El número debe ser el de la siguiente resolución.
