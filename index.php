@@ -184,10 +184,10 @@ if(isset($operation)){
       $estado="aprobada";
       if($tipocom!="noremunerada"){
 	//shell_exec("echo $resolucion >> etc/resoluciones.txt");
+	$result=mysqlCmd("show table status where Name='Resoluciones';",$qout=0,$qlog=0);
 	$resolucion=$result["Auto_increment"];
 	$sql="insert into Resoluciones (comisionid) values ('$comisionid');";
 	mysqlCmd($sql);
-	$result=mysqlCmd("show table status where Name='Resoluciones';",$qout=0,$qlog=0);
       }else{
 	$resolucion="99999";
       }
