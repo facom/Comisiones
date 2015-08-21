@@ -78,6 +78,9 @@ if(!isBlank($out)){
 $out=array_search($usercedula,$SECRETARIAS);
 if(!isBlank($out)){
   $qperm=-1;
+  if($usercedula==$SECRETARIAS["decanatura"]){
+    $qperm=-2;
+  }
 }
 //CHECK DEAN
 if($usercedula==$DIRECTORS["decanatura"] or
