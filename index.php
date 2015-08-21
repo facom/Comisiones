@@ -1555,7 +1555,7 @@ $error
   </form>
 <a href="JavaScript:void(null)"
    onclick="$('#ejemplos').toggle('fast',null);">Ejemplos</a><br/>
-<table id="ejemplos" border=0px style="margin-left:10px;font-size:12px;display:block;color:blue;">
+<table id="ejemplos" border=0px style="margin-left:10px;font-size:12px;display:none;color:blue;">
   <tr>
     <td>
       Muestre todas las comisiones presentadas a la fecha:<br/>
@@ -1586,7 +1586,7 @@ $error
     <td>
       Muestre todos las comisiones en idioma inglés:<br/>
       <pre>
-	* from Comisiones where idioma='Inglés'
+	* from Comisiones where idioma like 'Ingl%'
       </pre>
     </td>
   </tr>
@@ -1607,10 +1607,55 @@ $error
       y antes del 20 de agosto:<br/>
 
       <pre>
-	* from Comisiones where actualizacion>='2015-08-15' and actualizacion<'2015-08-20'
+	* from Comisiones where actualizacion>='2015-08-15' and actualizacion<='2015-08-20'
       </pre>
     </td>
   </tr>
+
+  <tr>
+    <td>
+
+      Todas las comisiones de biología de 2015:<br/>
+
+      <pre>
+	* from Comisiones where actualizacion like '2015%' and institutoid='biologia'
+      </pre>
+    </td>
+  </tr>
+
+  <tr>
+    <td>
+
+      Muestre los números de resolución y las cédulas de todas las comisiones:<br/>
+
+      <pre>
+	cedula,resolucion from Comisiones order by resolucion
+      </pre>
+    </td>
+  </tr>
+
+  <tr>
+    <td>
+
+    Los campos de la base de datos son: comisionid (identificador alfa
+       numérico de la solicitud), resolucion (número de la resolución,
+       99999 si es un permiso), fecharesolucion (fecha de la
+       resolución), cedula (cédula del solicitante), institutoid
+       (instituto en minúsculas y sin tilde), fecha (fecha de
+       radicación), actividad (actividad de la comisión), lugar (lugar
+       de la comisión), tipocom (tipo de comisión, sevicios, estudios,
+       noremunerada - es decir permiso), objeto (objetivo de la
+       comisión), idioma (idioma de la comisión), dedicacion (¿tiene
+       dedicación exclusiva?), estado (estado de la solicitud),
+       radicacion (fecha de radiación), actualizacion (fecha de
+       actualización), actualiza (cédula de quién actualiza),
+       vistobueno (¿tiene visto bueno?), aprobacion (¿ha sido
+       aprobada?), extra1 (número de días que le restan para permisos
+       por este año).
+
+    </td>
+  </tr>
+
 
 </table>
 <p></p>
