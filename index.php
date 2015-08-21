@@ -77,7 +77,7 @@ if(!isBlank($out)){
 //CHECK SECRETARIA
 $out=array_search($usercedula,$SECRETARIAS);
 if(!isBlank($out)){
-  $qperm=1;
+  $qperm=-1;
 }
 //CHECK DEAN
 if($usercedula==$DIRECTORS["decanatura"] or
@@ -157,7 +157,7 @@ if(isset($operation)){
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     //
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    if($qperm==1 and $vistobueno=="Si" and $tipocom=="noremunerada"){
+    if(abs($qperm)==1 and $vistobueno=="Si" and $tipocom=="noremunerada"){
       $parts=preg_split("/-/",$DATE);
       $year=$parts[0];
       if($year!=$ano){
@@ -204,7 +204,7 @@ if(isset($operation)){
 	$estado="solicitada";
       }
     }
-    if($qperm==0 and $estado=="devuelta"){$estado="solicitada";}
+    if(abs($qperm)==0 and $estado=="devuelta"){$estado="solicitada";}
 
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     //GRABAR DATOS EN BASE DE DATOS
@@ -813,6 +813,7 @@ if($action=="Solicitar"){
       if($field=="extra1"){$field="diasdisponible";}
       if($field=="extra2"){$field="ano";}
       $$field=$results[$fieldn];
+      //echo "FIELD = $field, VALUE = ".$$field."<br/>";
     }
     foreach($TEXTS as $text){
       $$text=shell_exec("cat comisiones/$comisionid/$text.txt");
@@ -872,7 +873,7 @@ $reslink=<<<R
 R;
  
  $extrares="";
- if($qperm==2){
+ if(abs($qperm)==2){
    $extrares="<!-- -------------------------------------------------- -->
     <a href=comisiones/$comisionid/resolucion-blank-$comisionid.html target='_blank'>
       Resolución imprimible</a>
@@ -893,25 +894,25 @@ R;
   $disp3="";
   $disp4="";
   $tabcolor="white";
-  if($qperm==0){
+  if(abs($qperm)==0){
     $disp1="style='display:none'";
     $disp4="style='display:none'";
   }
-  if($qperm==1){
+  if(abs($qperm)==1){
     $disp2="style='display:none'";
   }
 
   if($vistobueno=="Si"){
     $notification="<i style='color:blue'>Esta solicitud ya ha recibido visto bueno del director.</i>";
     $tabcolor="lightblue";
-    if($qperm<=1){
+    if(abs($qperm)<=1){
       $disp3="disabled";
     }
   }
   if($aprobacion=="Si"){
     $notification="<i style='color:blue'>Esta solicitud ya ha sido aprobada</i>";
     $tabcolor="lightgreen";
-    if($qperm<=1){
+    if(abs($qperm)<=1){
       $disp3="disabled";
     }
   }
@@ -927,7 +928,8 @@ R;
   //GENERATE TIPO
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   $estadosel=generateSelection($ESTADOS,"estado",$estado,$disabled="");
-  $tiposel=generateSelection($TIPOS,"tipo",$tipo,$disabled="$disp3");
+  //echo "TIPO:$tipo<br/>";
+  $tiposel=generateSelection($TIPOS,"tipo",$tipo,$disabled="$disp3",$readonly=1);
   $tipoidsel=generateSelection($TIPOSID,"tipoid",$tipoid,$disabled="$disp3");
   $instsel=generateSelection($INSTITUTOS,"institutoid",$institutoid,$disabled="$disp3");
   $dedsel=generateSelection($SINO,"dedicacion",$dedicacion,$disabled="$disp3");
@@ -1297,9 +1299,9 @@ if($action=="Consultar"){
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   $where="";
   $generar="";
-  if($qperm==0){
+  if(abs($qperm)==0){
     $where="where cedula='$usercedula'";
-  }else if($qperm==1){
+  }else if(abs($qperm)==1){
     $where="where institutoid='$userinstituto'";
   }
 
@@ -1353,7 +1355,7 @@ T;
     $generar="";
     $reslink="";
     $extrares="";
-    if($qperm==2 and $taprobacion=="Si" and $ttipocomx!="noremunerada"){
+    if(abs($qperm)==2 and $taprobacion=="Si" and $ttipocomx!="noremunerada"){
       $generar="<!-- -------------------------------------------------- -->
     <a href=?$USERSTRING&comisionid=$tcomisionid&operation=Resolucion&action=Consultar>
       Generar</a>";
@@ -1366,7 +1368,7 @@ T;
   (<a href=comisiones/$tcomisionid/resolucion-$tcomisionid.pdf target='_blank'>pdf</a>)
 ";
       $extrares="";
-      if($qperm==2){
+      if(abs($qperm)==2){
 	$extrares="<!-- -------------------------------------------------- -->
     <a href=comisiones/$tcomisionid/resolucion-blank-$tcomisionid.html target='_blank'>
       Resolución imprimible</a>
@@ -1419,7 +1421,7 @@ T;
  }
 
  $informes="";
- if($qperm){
+ if(abs($qperm)){
    $informes="<a href='?usercedula=$cedula&userpass=$userpass&action=Informes'>Informes</a>";
  }
 
@@ -1450,7 +1452,7 @@ C;
 ////////////////////////////////////////////////////////////////////////
 if($action=="Informes"){
 
-  if($qperm==0){
+  if(abs($qperm)==0){
     $error=errorMessage("No autorizado para generar informes.");
     $content.="$error";
     goto footer;

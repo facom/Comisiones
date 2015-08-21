@@ -26,10 +26,15 @@ E;
  return $error;
 }
 
-function generateSelection($values,$name,$value,$disabled="")
+function generateSelection($values,$name,$value,$disabled="",$readonly=0)
 {
   $parts=$values;
   $selection="";
+  if($readonly){
+    $selection.="<input type='hidden' name='$name' value='$value'>";
+    $selection.=$value;
+    return $selection;
+  }
   $selection.="<select name='$name' style='' $disabled>";
   foreach(array_keys($parts) as $part){
     $show=$parts[$part];
