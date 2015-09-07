@@ -583,7 +583,7 @@ $DECANOTXT, Facultad de Ciencias Exactas y Naturales
 </p>
 
 <p style="font-size:14px">
-Copia: $COORDINADOR, $COORDINADORTXT de Talento Humano Archivo.
+Copia: $COORDINADOR, $COORDINADORTXT de Talento Humano<br/>Archivo.
 </p>
 
 </body>
