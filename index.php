@@ -99,6 +99,14 @@ if(isset($operation)){
   //////////////////////////////////////////////////////////////
   //ACTUALIZAR USUARIO
   //////////////////////////////////////////////////////////////
+  if($operation=="Backup"){
+    shell_exec("bash backup.sh");
+    $error=errorMessage("Respaldo realizado.  Descarguelo de <a href='scratch/backup-comisiones.tar.gz'>este enlace.</a>");
+  }
+
+  //////////////////////////////////////////////////////////////
+  //ACTUALIZAR USUARIO
+  //////////////////////////////////////////////////////////////
   if($operation=="Actualizar"){
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     //GRABAR DATOS EN BASE DE DATOS
@@ -1425,7 +1433,7 @@ T;
 
  $informes="";
  if(abs($qperm)){
-   $informes="<a href='?usercedula=$cedula&userpass=$userpass&action=Informes'>Informes</a>";
+   $informes="<a href='?usercedula=$cedula&userpass=$userpass&action=Informes'>Informes</a> | <a href='?usercedula=$cedula&userpass=$userpass&operation=Backup&action=Consultar'>Hacer respaldo</a>";
  }
 
 $content.=<<<C
