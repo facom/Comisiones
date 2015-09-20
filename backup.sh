@@ -8,6 +8,7 @@ mysqldump -u root --password=diplomaastro Comisiones > scratch/comisiones.sql
 
 echo "Backuping data..."
 tar cf $backfile comisiones 
+tar rf $backfile etc
 
 echo "Compressing..."
 tar rf $backfile scratch/comisiones.sql 

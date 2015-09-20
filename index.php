@@ -1499,8 +1499,12 @@ if($action=="Informes"){
     if(preg_match("/^\d+$/",$field)){continue;}
     array_push($fields,$field);
     $fields_txt.="$field;";
+    if($field=="cedula"){
+      array_push($fields,"nombre");
+      $fields_txt.="nombre;";
+    }
   }
-  fwrite($fl,utf8_encode(trim($fields_txt,";")."\n"));
+  fwrite($fl,utf8_decode(trim($fields_txt,";")."\n"));
 
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   //GENERATE TABLE
@@ -1523,6 +1527,7 @@ $table.="</tr>";
    $table.="<tr>";
    $values="";
    foreach($fields as $field){
+     if($field=="nombre"){continue;}
      $value=$solicitud[$field];
      $values.="\"$value\";";
      if($field=="comisionid"){
@@ -1535,8 +1540,14 @@ C;
 $table.=<<<T
 <td>$value</td>
 T;
+     if($field=="cedula"){
+       $profesor=mysqlCmd("select nombre from Profesores where cedula='$value'",$qout=1);
+       $value=$profesor[0][0];
+       $values.="\"$value\";";
+       $table.="<td>$value</td>";
+     }
    }
-   fwrite($fl,utf8_encode(trim($values,";")."\n"));
+   fwrite($fl,utf8_decode(trim($values,";")."\n"));
    $table.="</tr>";
  }
  $table.="</table>";
