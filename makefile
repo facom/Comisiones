@@ -21,3 +21,15 @@ pull:
 	@git reset --hard HEAD	
 	@git pull
 	@chown -R www-data.www-data .
+
+backup:
+	@echo "Backuping comisiones..."
+	@bash combackup.sh Quakes
+
+restore:
+	@echo "Restoring table Quakes..."
+	@cat data/sql/dump/Quakes.sql.7z-* > data/sql/Quakes.sql.7z
+	@p7zip -d data/sql/Quakes.sql.7z
+	@echo "Enter root mysql password..."
+	@mysql -u root -p tQuakes < data/sql/Quakes.sql
+	@p7zip data/sql/Quakes.sql
