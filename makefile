@@ -13,7 +13,7 @@ cleandb:clean
 
 commit:
 	@echo "Commiting changes..."
-	@git commit -am "Commit"
+	@-git commit -am "Commit"
 	@git push origin master
 
 pull:
