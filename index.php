@@ -831,6 +831,14 @@ if($action=="Solicitar"){
     }
     $error=errorMessage("Solicitud $comisionid cargada");
   }  
+  $today=preg_split("/-/",$DATE);
+  $year=$today[0];
+  $cresults=mysqlCmd("select sum(extra1) from Comisiones where cedula='$cedula' and tipocom='noremunerada' and actualizacion like '$year%'");
+  $diasdisponible=6-$cresults[0];
+  $comment="";
+  if($diasdisponible==0){
+    $comment="(Ya uso todos los 6 días disponibles para el año)";
+  }
 
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   //FECHA
@@ -1071,7 +1079,7 @@ Días disponibles (año $ano):
 <input type="hidden" name="ano" value="$ano">
 </td>
 <td>
-$diasdisponible
+$diasdisponible $comment
 <input type="hidden" name="diasdisponible" value="$diasdisponible">
 </td>
 </tr>
