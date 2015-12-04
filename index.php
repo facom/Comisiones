@@ -1,4 +1,4 @@
-<?php
+	<?php
 $content="";
 
 ////////////////////////////////////////////////////////////////////////
@@ -556,7 +556,7 @@ PARA LA CUAL SE CONCEDE UNA $rtipocom
 
 <p align="justify">
 LA DECANA DE LA FACULTAD DE CIENCIAS EXACTAS Y NATURALES en
-uso de sus atribuciones conferidas mediante artículo 34, literal ñ del
+uso de sus atribuciones conferidas mediante artículo 53, literal ñ del
 Acuerdo Superior Nro. 1 de 1994.
 </p> 
 
@@ -648,7 +648,7 @@ PARA LA CUAL SE CONCEDE UNA $rtipocom
 
 <p align="justify">
 LA DECANA DE LA FACULTAD DE CIENCIAS EXACTAS Y NATURALES en
-uso de sus atribuciones conferidas mediante artículo 34, literal ñ del
+uso de sus atribuciones conferidas mediante artículo 53, literal ñ del
 Acuerdo Superior Nro. 1 de 1994.
 </p> 
 
