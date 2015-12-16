@@ -97,7 +97,36 @@ if($usercedula==$DIRECTORS["decanatura"] or
 if(isset($operation)){
 
   //////////////////////////////////////////////////////////////
-  //ACTUALIZAR USUARIO
+  //UPLOAD CUMPLIDO
+  //////////////////////////////////////////////////////////////
+  if($operation=="Cumplir"){
+
+    $file1=$_FILES["file_cumplido1"];
+    $file2=$_FILES["file_cumplido2"];
+
+    $update="";
+    if($file1["size"]>0){
+      $name=$file1["name"];
+      $tmp=$file1["tmp_name"];
+      $cumplido1="Cumplido1_$name";
+      shell_exec("cp $tmp comisiones/$comisionid/'$cumplido1'");
+      $update="set cumplido1='$name',";
+    }
+    if($file2["size"]>0){
+      $name=$file2["name"];
+      $tmp=$file2["tmp_name"];
+      $cumplido2="Cumplido2_$name";
+      shell_exec("cp $tmp comisiones/$comisionid/'$cumplido2'");
+      $update="set cumplido2='$name',";
+    }
+    $update=trim($update,",");
+
+    $sql="update Comisiones $update where comisionid='$comisionid';";
+    echo "SQL: $sql<br/>";
+  }
+
+  //////////////////////////////////////////////////////////////
+  //PERFORM BACKUP
   //////////////////////////////////////////////////////////////
   if($operation=="Backup"){
     shell_exec("bash backup.sh");
@@ -1311,6 +1340,58 @@ C;
 ////////////////////////////////////////////////////////////////////////
 //LISTA DE SOLICITUDES
 ////////////////////////////////////////////////////////////////////////
+if($action=="Cumplido"){
+
+  $results=mysqlCmd("select * from Comisiones where comisionid='$comisionid'");
+  foreach($FIELDS_COMISIONES as $field){
+    //$$field=utf8_encode($results[$field]);
+    $fieldn=$field;
+    if($field=="extra1"){$field="diaspermiso";}
+    $$field=$results[$fieldn];
+  }
+  foreach($FIELDS_PROFESORES as $field){
+    //$$field=utf8_encode($results[$field]);
+    $fieldn=$field;
+    if($field=="extra1"){$field="diasdisponible";}
+    if($field=="extra2"){$field="ano";}
+    $$field=$results[$fieldn];
+    //echo "FIELD = $field, VALUE = ".$$field."<br/>";
+  }
+
+$content.=<<<C
+<form method="GET" action="index.php">
+<input type="hidden" name="usercedula" value="$usercedula">
+<input type="hidden" name="userpass" value="$userpass">
+<input type="hidden" name="comisionid" value="$comisionid">
+<input type="hidden" name="action" value="Cumplido">
+<h2>Cumplido de Comisión</h2>
+<table>
+  <tr><td><b>Comisión</b>:</td><td>$comisionid</td></tr>
+  <tr><td><b>Fecha Resolución</b>:</td><td>$fecharesolucion</td></tr>
+  <tr><td><b>Fechas de la Comisión</b>:</td><td>$fecha</td></tr>
+
+  <tr>
+    <td><b>Cumplido 1</b>:</td>
+    <td>
+      <input type="file" name="file_cumplido1" value="$file_cumplido1"><br/>
+      Archivo: <a href="comisiones/$comisionid/$cumplido1" target="_blank">$cumplido1</a>
+      <input type="hidden" name="cumplido1" value="$cumplido1">
+    </td>
+  </tr>
+  
+  <tr><td colspan=2>
+      <input type="submit" name="operation" value="Cumplir">
+  </td></tr>
+
+</table>
+</form>
+C;
+
+}
+
+////////////////////////////////////////////////////////////////////////
+//LISTA DE SOLICITUDES
+////////////////////////////////////////////////////////////////////////
 if($action=="Consultar"){
   
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1403,7 +1484,15 @@ T;
       $borrar="<!-- -------------------------------------------------- -->
   <a href=?$USERSTRING&comisionid=$tcomisionid&operation=Borrar&action=Consultar>
   Borrar</a>";
-    }   
+    }
+    $cumplido="";
+    if($taprobacion=="Si" and 
+       isBlank($cumplido1) and
+       $ttipocomx!="noremunerada"){
+      $cumplido="<!-- -------------------------------------------------- -->
+  <a href=?$USERSTRING&comisionid=$tcomisionid&action=Cumplido>
+  Cumplido</a>";
+    }
 
 $table.=<<<T
 <tr style='background:$estadocolor'>
@@ -1426,6 +1515,7 @@ $table.=<<<T
   $extrares
   </td>
   <td>
+$cumplido
 $borrar
   </td>
 </tr>
