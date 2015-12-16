@@ -1,4 +1,4 @@
-	<?php
+<?php
 $content="";
 
 ////////////////////////////////////////////////////////////////////////
@@ -8,6 +8,18 @@ $HOST=$_SERVER["HTTP_HOST"];
 $SCRIPTNAME=$_SERVER["SCRIPT_FILENAME"];
 $ROOTDIR=rtrim(shell_exec("dirname $SCRIPTNAME"));
 require("$ROOTDIR/etc/configuration.php");
+
+////////////////////////////////////////////////////////////////////////
+//OTHER CONFIGURATION
+////////////////////////////////////////////////////////////////////////
+$DESTINATARIOS=array(
+   array("Secretaria de la Decana","Luz Mary Castro","luz.castro@udea.edu.co"),
+   array("Secretaria del CIEN","Maricela","luz.castro@udea.edu.co"),
+   array("Programa de Extensión","Natalia López","natalia.lopez@udea.edu.co"),
+   array("Vicerrectoria de Investigación","Natalia López","natalia.lopez@udea.edu.co"),
+   array("SIU","Natalia López","natalia.lopez@udea.edu.co"),
+   array("Vicerrectoría de Docencia","Natalia López","natalia.lopez@udea.edu.co")
+);
 
 ////////////////////////////////////////////////////////////////////////
 //HEADER
@@ -105,24 +117,27 @@ if(isset($operation)){
     $file2=$_FILES["file_cumplido2"];
 
     $update="";
+    $error="";
     if($file1["size"]>0){
       $name=$file1["name"];
       $tmp=$file1["tmp_name"];
-      $cumplido1="Cumplido1_$name";
-      shell_exec("cp $tmp comisiones/$comisionid/'$cumplido1'");
+      $file_cumplido1="Cumplido1_$name";
+      shell_exec("cp $tmp comisiones/$comisionid/'$file_cumplido1'");
       $update="set cumplido1='$name',";
+      $error.=errorMessage("Archivo de Cumplido '$file_cumplido1' subido...");
     }
     if($file2["size"]>0){
       $name=$file2["name"];
       $tmp=$file2["tmp_name"];
-      $cumplido2="Cumplido2_$name";
-      shell_exec("cp $tmp comisiones/$comisionid/'$cumplido2'");
+      $file_cumplido2="Cumplido2_$name";
+      shell_exec("cp $tmp comisiones/$comisionid/'$file_cumplido2'");
       $update="set cumplido2='$name',";
+      $error=errorMessage("Archivo de Cumplido '$file_cumplido1' subido...");
     }
     $update=trim($update,",");
 
     $sql="update Comisiones $update where comisionid='$comisionid';";
-    echo "SQL: $sql<br/>";
+    mysqlCmd($sql);
   }
 
   //////////////////////////////////////////////////////////////
@@ -1358,32 +1373,59 @@ if($action=="Cumplido"){
     //echo "FIELD = $field, VALUE = ".$$field."<br/>";
   }
 
+  //DESTINATARIOS
+
 $content.=<<<C
+<a href="?$USERSTRING&action=Consultar">Lista de Solicitudes</a> | <a href="?$USERSTRING">Salir</a>
+<p/>
+$error
 <form method="GET" action="index.php">
 <input type="hidden" name="usercedula" value="$usercedula">
 <input type="hidden" name="userpass" value="$userpass">
 <input type="hidden" name="comisionid" value="$comisionid">
 <input type="hidden" name="action" value="Cumplido">
 <h2>Cumplido de Comisión</h2>
+<center>
 <table>
-  <tr><td><b>Comisión</b>:</td><td>$comisionid</td></tr>
-  <tr><td><b>Fecha Resolución</b>:</td><td>$fecharesolucion</td></tr>
-  <tr><td><b>Fechas de la Comisión</b>:</td><td>$fecha</td></tr>
+  <tr><td style="text-align:right"><b>Comisión</b>:</td><td>$comisionid</td></tr>
+  <tr><td style="text-align:right"><b>Fecha Resolución</b>:</td><td>$fecharesolucion</td></tr>
+  <tr><td style="text-align:right"><b>Fechas de la Comisión</b>:</td><td>$fecha</td></tr>
 
   <tr>
-    <td><b>Cumplido 1</b>:</td>
+    <td style="text-align:right"><b>Cumplido 1</b>:</td>
     <td>
       <input type="file" name="file_cumplido1" value="$file_cumplido1"><br/>
       Archivo: <a href="comisiones/$comisionid/$cumplido1" target="_blank">$cumplido1</a>
       <input type="hidden" name="cumplido1" value="$cumplido1">
     </td>
   </tr>
+
+  <tr>
+    <td style="text-align:right"><b>Cumplido 2</b>:</td>
+    <td>
+      <input type="file" name="file_cumplido2" value="$file_cumplido2"><br/>
+      Archivo: <a href="comisiones/$comisionid/$cumplido2" target="_blank">$cumplido2</a>
+      <input type="hidden" name="cumplido2" value="$cumplido2">
+    </td>
+  </tr>
+
+  <tr>
+    <td style="text-align:right"><b>Destinatarios</b>:</td>
+    <td>
+      <input type="checkbox" name="destinatarios" value="jorge.zuluaga@udea.edu.co" disabled checked> Jorge<br/>
+      <input type="checkbox" name="destinatarios" value="jorge.zuluaga@udea.edu.co" disabled checked> Jorge<br/>
+      Otros destinatarios: 
+      <input type="text" name="otros_destinatarios">
+    </td>
   
-  <tr><td colspan=2>
+  </tr>
+  
+  <tr><td></td><td style="text-align:left">
       <input type="submit" name="operation" value="Cumplir">
   </td></tr>
 
 </table>
+</center>
 </form>
 C;
 
@@ -1408,7 +1450,7 @@ if($action=="Consultar"){
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   //VERIFY PERMISSIONS
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  $fields="comisionid,cedula,estado,actualizacion,actualiza,aprobacion,institutoid,tipocom,vistobueno";
+  $fields="comisionid,cedula,estado,actualizacion,actualiza,aprobacion,institutoid,tipocom,vistobueno,cumplido1";
   $solicitudes=mysqlCmd("select $fields,TIMESTAMP(radicacion) as radicacion from Comisiones $where order by radicacion desc;",$qout=1);
   if($solicitudes==0){$nsolicitudes=0;}
   else{$nsolicitudes=count($solicitudes);}
@@ -1433,6 +1475,7 @@ T;
     $comision=$solicitudes[$i];
     $tcomisionid=$comision['comisionid'];
     $tcedula=$comision['cedula'];
+    $tcumplido=$comision['cumplido1'];
     $testadox=$comision['estado'];
     $testado=$ESTADOS[$testadox];
     $ttipocomx=$comision['tipocom'];
@@ -1487,11 +1530,16 @@ T;
     }
     $cumplido="";
     if($taprobacion=="Si" and 
-       isBlank($cumplido1) and
+       isBlank($tcumplido) and
        $ttipocomx!="noremunerada"){
       $cumplido="<!-- -------------------------------------------------- -->
   <a href=?$USERSTRING&comisionid=$tcomisionid&action=Cumplido>
   Cumplido</a>";
+    }
+    if(!isBlank($tcumplido)){
+      $cumplido="<!-- -------------------------------------------------- -->
+<a href='comisiones/$tcomisionid/$tcumplido' target='_blank'>Archivo de Cumplido</a><br/>
+<a href=?$USERSTRING&comisionid=$tcomisionid&action=Cumplido>Subir Cumplido</a>";
     }
 
 $table.=<<<T
