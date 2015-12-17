@@ -12,13 +12,14 @@ require("$ROOTDIR/etc/configuration.php");
 ////////////////////////////////////////////////////////////////////////
 //OTHER CONFIGURATION
 ////////////////////////////////////////////////////////////////////////
-$DESTINATARIOS=array(
-   array("Secretaria de la Decana","Luz Mary Castro","luz.castro@udea.edu.co"),
-   array("Secretaria del CIEN","Maricela","luz.castro@udea.edu.co"),
-   array("Programa de Extensión","Natalia López","natalia.lopez@udea.edu.co"),
-   array("Vicerrectoria de Investigación","Natalia López","natalia.lopez@udea.edu.co"),
-   array("SIU","Natalia López","natalia.lopez@udea.edu.co"),
-   array("Vicerrectoría de Docencia","Natalia López","natalia.lopez@udea.edu.co")
+$DESTINATARIOS_CUMPLIDOS=array(
+   array("Secretaria del Decanato","Luz Mary Castro","luz.castro@udea.edu.co"),
+   array("Secretaria del CIEN","Maricela Botero","maricela.boteros@udea.edu.co"),
+   array("Programa de Extensión","Natalia López","njlopez76@gmail.com"),
+   array("Fondo de Pasajes Internacionales","Mauricio Toro","fondosinvestigacion@udea.edu.co"),
+   array("Vicerrectoria de Investigación","Mauricio Toro","tramitesinvestigacion@udea.edu.co"),
+   array("Centro de Investigaciones SIU","Ana Eugenia","aeugenia.restrepo@udea.edu.co"),
+   array("Fondo de Vicerrectoría de Docencia","Sandra Perez","sandra.perez@udea.edu.co")
 );
 
 ////////////////////////////////////////////////////////////////////////
@@ -113,17 +114,21 @@ if(isset($operation)){
   //////////////////////////////////////////////////////////////
   if($operation=="Cumplir"){
 
+    //GET INFORMATION ABOUT COMISION
+    $comision=getComisionInfo($comisionid);
+    
+    //FILES
     $file1=$_FILES["file_cumplido1"];
     $file2=$_FILES["file_cumplido2"];
 
-    $update="";
+    $update="set ";
     $error="";
     if($file1["size"]>0){
       $name=$file1["name"];
       $tmp=$file1["tmp_name"];
       $file_cumplido1="Cumplido1_$name";
       shell_exec("cp $tmp comisiones/$comisionid/'$file_cumplido1'");
-      $update="set cumplido1='$name',";
+      $update.="cumplido1='$name',";
       $error.=errorMessage("Archivo de Cumplido '$file_cumplido1' subido...");
     }
     if($file2["size"]>0){
@@ -131,13 +136,36 @@ if(isset($operation)){
       $tmp=$file2["tmp_name"];
       $file_cumplido2="Cumplido2_$name";
       shell_exec("cp $tmp comisiones/$comisionid/'$file_cumplido2'");
-      $update="set cumplido2='$name',";
-      $error=errorMessage("Archivo de Cumplido '$file_cumplido1' subido...");
+      $update.="cumplido2='$name',";
+      $error.=errorMessage("Archivo de Cumplido '$file_cumplido2' subido...");
     }
-    $update=trim($update,",");
 
-    $sql="update Comisiones $update where comisionid='$comisionid';";
-    mysqlCmd($sql);
+    //UPDATE DATABASE
+    $qemail=1;
+    if($update!="set " and $comision["qcumplido"]==0){
+      $update.="qcumplido='1'";
+      $sql="update Comisiones $update where comisionid='$comisionid';";
+      //echo "SQL: $sql<br/>";
+      mysqlCmd($sql);
+    }else if($comision["qcumplido"]==0){
+      $error=errorMessage("No se ha subido ningún archivo.");
+      $qemail=0;
+    }else{
+      $error=errorMessage("No se han cambiado los archivos.");
+    }
+
+    //SEND E-MAIL
+    if($qemail){
+      
+
+
+      $i=0;
+      foreach($DESTINATARIOS_CUMPLIDOS as $destino){
+	
+      }
+
+    }
+
   }
 
   //////////////////////////////////////////////////////////////
@@ -1373,7 +1401,29 @@ if($action=="Cumplido"){
     //echo "FIELD = $field, VALUE = ".$$field."<br/>";
   }
 
+  //INFORMATION CUMPLIDO
+  if(isBlank($infocumplido)){
+    $infocumplido="Cumplido de Comisión Otorgada.";
+  }
+
   //DESTINATARIOS
+  $destinatarios="";
+  $i=0;
+  foreach($DESTINATARIOS_CUMPLIDOS as $destino){
+    $dependencia=$destino[0];
+    $persona=$destino[1];
+    $emailpersona=$destino[2];
+
+    $status="";
+    if($i==0){
+      $status="checked readonly";
+    }
+
+$destinatarios.=<<<D
+<input type="checkbox" name="destinatarios" value="$i" $status><a href="mailto:$persona <$emailpersona">$dependencia</a><br/>
+D;
+    $i++;
+  }
 
 $content.=<<<C
 <a href="?$USERSTRING&action=Consultar">Lista de Solicitudes</a> | <a href="?$USERSTRING">Salir</a>
@@ -1386,8 +1436,8 @@ $error
 <input type="hidden" name="action" value="Cumplido">
 <h2>Cumplido de Comisión</h2>
 <center>
-<table>
-  <tr><td style="text-align:right"><b>Comisión</b>:</td><td>$comisionid</td></tr>
+<table border=0px width=80%>
+  <tr><td width=20% style="text-align:right"><b>Comisión</b>:</td><td width=30%>$comisionid</td></tr>
   <tr><td style="text-align:right"><b>Fecha Resolución</b>:</td><td>$fecharesolucion</td></tr>
   <tr><td style="text-align:right"><b>Fechas de la Comisión</b>:</td><td>$fecha</td></tr>
 
@@ -1412,14 +1462,28 @@ $error
   <tr>
     <td style="text-align:right"><b>Destinatarios</b>:</td>
     <td>
-      <input type="checkbox" name="destinatarios" value="jorge.zuluaga@udea.edu.co" disabled checked> Jorge<br/>
-      <input type="checkbox" name="destinatarios" value="jorge.zuluaga@udea.edu.co" disabled checked> Jorge<br/>
-      Otros destinatarios: 
-      <input type="text" name="otros_destinatarios">
+      $destinatarios
+      Otros destinatarios (correos separados por ","):<br/>
+      <input type="text" name="otros_destinatarios" size=40>
     </td>
   
   </tr>
   
+  <tr>
+    <td style="text-align:right"><b>Información Complementaria</b>:<br/>
+      <i style="font-size:12px">
+	Incluya aquí otra información complementaria que pueda ser de
+	importancia para los destinatarios del cumplido. Así por
+	ejemplo, si el cumplido esta relacionado con un Proyecto de
+	Investigación y desea enviarlo a la dependencia que otorgo
+	recursos relacionados, indique el nombre del Proyecto.
+      </i>
+    </td>
+    <td>
+      <textarea name="infocumplido" cols=50 rows=5>$infocumplido</textarea>
+    </td>
+  </tr>
+
   <tr><td></td><td style="text-align:left">
       <input type="submit" name="operation" value="Cumplir">
   </td></tr>
@@ -1450,7 +1514,7 @@ if($action=="Consultar"){
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   //VERIFY PERMISSIONS
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  $fields="comisionid,cedula,estado,actualizacion,actualiza,aprobacion,institutoid,tipocom,vistobueno,cumplido1";
+  $fields="comisionid,cedula,estado,actualizacion,actualiza,aprobacion,institutoid,tipocom,vistobueno,qcumplido,cumplido1,cumplido2";
   $solicitudes=mysqlCmd("select $fields,TIMESTAMP(radicacion) as radicacion from Comisiones $where order by radicacion desc;",$qout=1);
   if($solicitudes==0){$nsolicitudes=0;}
   else{$nsolicitudes=count($solicitudes);}
@@ -1475,7 +1539,9 @@ T;
     $comision=$solicitudes[$i];
     $tcomisionid=$comision['comisionid'];
     $tcedula=$comision['cedula'];
-    $tcumplido=$comision['cumplido1'];
+    $tqcumplido=$comision['qcumplido'];
+    $tcumplido1=$comision['cumplido1'];
+    $tcumplido2=$comision['cumplido2'];
     $testadox=$comision['estado'];
     $testado=$ESTADOS[$testadox];
     $ttipocomx=$comision['tipocom'];
@@ -1530,16 +1596,19 @@ T;
     }
     $cumplido="";
     if($taprobacion=="Si" and 
-       isBlank($tcumplido) and
+       $tqcumplido==0 and
        $ttipocomx!="noremunerada"){
       $cumplido="<!-- -------------------------------------------------- -->
   <a href=?$USERSTRING&comisionid=$tcomisionid&action=Cumplido>
-  Cumplido</a>";
+  Subir Cumplido</a>";
     }
-    if(!isBlank($tcumplido)){
+    if($tqcumplido>0 and
+       $qperm){
       $cumplido="<!-- -------------------------------------------------- -->
-<a href='comisiones/$tcomisionid/$tcumplido' target='_blank'>Archivo de Cumplido</a><br/>
-<a href=?$USERSTRING&comisionid=$tcomisionid&action=Cumplido>Subir Cumplido</a>";
+<a href=?$USERSTRING&comisionid=$tcomisionid&action=Cumplido>Modificar Cumplido</a>";
+    }else if($qperm==0){
+      $cumplido="<!-- -------------------------------------------------- -->
+<a href=?$USERSTRING&comisionid=$tcomisionid&action=Cumplido>Cumplido Entregado</a>";
     }
 
 $table.=<<<T
