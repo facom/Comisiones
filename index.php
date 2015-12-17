@@ -116,48 +116,103 @@ if(isset($operation)){
 
     //GET INFORMATION ABOUT COMISION
     $comision=getComisionInfo($comisionid);
-    
+    $suffix="${cedula}_${comisionid}";
+
     //FILES
     $file1=$_FILES["file_cumplido1"];
     $file2=$_FILES["file_cumplido2"];
 
     $update="set ";
+
     $error="";
     if($file1["size"]>0){
       $name=$file1["name"];
       $tmp=$file1["tmp_name"];
-      $file_cumplido1="Cumplido1_$name";
+      $file_cumplido1="Cumplido1_${suffix}_$name";
       shell_exec("cp $tmp comisiones/$comisionid/'$file_cumplido1'");
       $update.="cumplido1='$name',";
-      $error.=errorMessage("Archivo de Cumplido '$file_cumplido1' subido...");
+      $error.=errorMessage("Archivo de Cumplido '$name' subido...");
+      $cumplido1=$name;
     }
     if($file2["size"]>0){
       $name=$file2["name"];
       $tmp=$file2["tmp_name"];
-      $file_cumplido2="Cumplido2_$name";
+      $file_cumplido2="Cumplido2_${suffix}_$name";
       shell_exec("cp $tmp comisiones/$comisionid/'$file_cumplido2'");
       $update.="cumplido2='$name',";
-      $error.=errorMessage("Archivo de Cumplido '$file_cumplido2' subido...");
+      $error.=errorMessage("Archivo de Cumplido '$name' subido...");
+      $cumplido2=$name;
     }
 
     //UPDATE DATABASE
     $qemail=1;
-    if($update!="set " and $comision["qcumplido"]==0){
+    if($update!="set "){
       $update.="qcumplido='1'";
       $sql="update Comisiones $update where comisionid='$comisionid';";
-      //echo "SQL: $sql<br/>";
       mysqlCmd($sql);
-    }else if($comision["qcumplido"]==0){
+    }
+
+    if($comision["qcumplido"]==0 and $update=="set "){
       $error=errorMessage("No se ha subido ningún archivo.");
       $qemail=0;
-    }else{
+    }
+
+    if($comision["qcumplido"]==1 and $update=="set "){
       $error=errorMessage("No se han cambiado los archivos.");
     }
 
     //SEND E-MAIL
     if($qemail){
-      
+      $ttipocom=$TIPOSCOM[$comision["tipocom"]];
 
+      $cumplidos="<ul>";
+      if(!isBlank($cumplido1)){
+	$cumplidos.="<li><a href='$URL/comisiones/$comisionid/Cumplido1_${suffix}_$cumplido1' download>$cumplido1</a></li>";
+      }
+      if(!isBlank($cumplido2)){
+	$cumplidos.="<li><a href='$URL/comisiones/$comisionid/Cumplido2_${suffix}_$cumplido2' download>$cumplido2</a></li>";
+      }
+      $cumplidos.="</ul>";
+
+$message=<<<M
+<p>
+El(La) Profesor(a) <b>$nombre</b> identificado con
+documento <b>$cedula</b> del <b>$instituto</b>, ha concluido una <b>$ttipocom</b> con el
+objectivo de <b>$actividad</b> que se realizon en
+fecha(s) <b>$fecha</b>.  
+</p>
+
+<p>
+Como parte de los compromisos con su dependencia el profesor ha subido
+al <b>Sistema de Comisiones de la Facultad</b>, el(los) siguiente(s)
+document(s) que certifican la realización de la actividad realizada
+por el profesor (cumplidos).
+</p>
+
+<p>
+Usted puede descargar el(los) documento(s) de los siguientes enlaces:
+</p>
+
+$cumplidos
+
+<p>
+La siguiente información de interés fue adicionalmente provista por el
+profesor para su conocimiento:
+<blockquote>$infocumplido</blockquote>
+</p>
+
+<p style="color:red">
+Le solicitamos amablemente confirmar la recepción de esta
+documentación haciendo click en este enlace: $linkconfirmacion.
+</p>
+
+<p>
+<b>Sistema de Solicitud de Comisiones<br/>
+Decanato, FCEN</b>
+</p>
+M;
+
+//echo "$message<br/>";
 
       $i=0;
       foreach($DESTINATARIOS_CUMPLIDOS as $destino){
