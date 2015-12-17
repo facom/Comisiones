@@ -113,4 +113,24 @@ function sendMail($email,$subject,$message,$headers="")
   }
   return $status;
 }
+
+function getComisionInfo($comisionid)
+{
+  global $FIELDS_COMISIONES,$FIELDS_PROFESORES;
+  $results=mysqlCmd("select * from Comisiones where comisionid='$comisionid'");
+  $comision=array();
+  foreach($FIELDS_COMISIONES as $field){
+    $fieldn=$field;
+    if($field=="extra1"){$field="diaspermiso";}
+    $comision["$field"]=$results[$fieldn];
+  }
+  foreach($FIELDS_PROFESORES as $field){
+    $fieldn=$field;
+    if($field=="extra1"){$field="diasdisponible";}
+    if($field=="extra2"){$field="ano";}
+    $comision["$field"]=$results[$fieldn];
+  }
+  return $comision;
+}
+
 ?>
