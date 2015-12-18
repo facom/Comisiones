@@ -5,3 +5,5 @@ Diciembre 17 de 2015:
 
 - Se agrego el Sistema de Cumplidos.
 - Se agrego una utilidad para la fecha.
+- Se agrego mecanismo de confirmacion de cumplidos.
+- Se agrego un nuevo estado "Comision Cumplida".
