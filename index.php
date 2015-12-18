@@ -132,6 +132,42 @@ if($usercedula==$DIRECTORS["decanatura"] or
 if(isset($operation)){
 
   //////////////////////////////////////////////////////////////
+  //CONFIRMA CUMPLIDO
+  //////////////////////////////////////////////////////////////
+  if($operation=="confirmacumplido"){
+
+    //GET INFORMATION ABOUT COMISION
+    $comision=getComisionInfo($comisionid);
+    array2Globals($comision);
+    
+    //UPDATE DATABASE
+    $now=mysqlCmd("select now();")[0];
+    if(!preg_match("/$emailconfirma/",$confirmacumplido)){
+      $sql="update Comisiones set confirmacumplido='$emailconfirma::$now;$confirmacumplido' where comisionid='$comisionid';";
+      echo "$sql<br/>";
+      mysqlCmd($sql);
+    }
+
+echo<<<M
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+</head>
+<body>
+<center>
+<div style="font-size:16px;text-align:center;background:lightgray;padding:30px;width:80%">
+  Gracias por confirmar la recepción en su
+  correo, <b>$emailconfirma</b>, de los cumplidos de la
+  comisión <b>$comisionid</b> del profesor <b>$nombre</b>.
+</div>
+</center>
+</body>
+M;
+
+    return;
+  }
+
+  //////////////////////////////////////////////////////////////
   //UPLOAD CUMPLIDO
   //////////////////////////////////////////////////////////////
   if($operation=="Cumplir"){
@@ -263,7 +299,7 @@ if(isset($operation)){
 	$persona=$destino[1];
 	$emailpersona=$destino[2];
 
-	$url="$URL/?operation=confirmacumplido&comisionid=$comisionid&email=$emailpersona";
+	$url="$URL/?operation=confirmacumplido&comisionid=$comisionid&emailconfirma=$emailpersona";
 	$linkconfirmacion="<a href=$url>$url</a>";
 	
 $message=<<<M
@@ -1592,20 +1628,29 @@ if($action=="Cumplido"){
   }
 
   foreach($DESTINATARIOS_CUMPLIDOS as $destino){
+
     $dependencia=$destino[0];
     $persona=$destino[1];
     $emailpersona=$destino[2];
+
+    $confirm="";
 
     $status="";
     if($i==0){
       $status="checked readonly";
     }
     if(preg_match("/$emailpersona;/",$destinoscumplido)){
+      if(preg_match("/$emailpersona::([^::]+)/",$confirmacumplido,$matches)){
+	$dateconfirm=$matches[1];
+	$confirm="<sub style='color:green'>[confirmado en $dateconfirm]</sub>";
+      }else{
+	$confirm="<sub style='color:red'>[No confirmado todavía]</sub>";
+      }
       $status="checked readonly";
     }
 
 $destinatarios.=<<<D
-<input type="checkbox" name="destinatarios[]" value="$i" $status><a href="mailto:$persona <$emailpersona">$dependencia</a><br/>
+<input type="checkbox" name="destinatarios[]" value="$i" $status><a href="mailto:$persona <$emailpersona">$dependencia</a> $confirm<br/>
 D;
     $i++;
   }
@@ -1789,12 +1834,9 @@ T;
     }else{
       $reslink="<i>No disponible</i>";
     }
+
+    //GENERANDO ACCIONES
     $borrar="";
-    if($taprobacion!="Si" and $tvistobueno!="Si"){
-      $borrar="<!-- -------------------------------------------------- -->
-  <a href=?$USERSTRING&comisionid=$tcomisionid&operation=Borrar&action=Consultar>
-  Borrar</a>";
-    }
     $cumplido="";
     if($taprobacion=="Si" and 
        $tqcumplido==0 and
@@ -1807,11 +1849,19 @@ T;
        $qperm){
       $cumplido="<!-- -------------------------------------------------- -->
 <a href=?$USERSTRING&comisionid=$tcomisionid&action=Cumplido>Modificar Cumplido</a>";
-    }else if($qperm==0){
+    }
+    else if($qperm==0){
       $cumplido="<!-- -------------------------------------------------- -->
 <a href=?$USERSTRING&comisionid=$tcomisionid&action=Cumplido>Actualizar Cumplido</a>";
     }
+    if($taprobacion!="Si" and $tvistobueno!="Si"){
+      $borrar="<!-- -------------------------------------------------- -->
+  <a href=?$USERSTRING&comisionid=$tcomisionid&operation=Borrar&action=Consultar>
+  Borrar</a>";
+      $cumplido="";
+    }
 
+    //CREA TABLA
 $table.=<<<T
 <tr style='background:$estadocolor'>
   <td>
