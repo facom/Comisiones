@@ -8,6 +8,7 @@ $HOST=$_SERVER["HTTP_HOST"];
 $SCRIPTNAME=$_SERVER["SCRIPT_FILENAME"];
 $ROOTDIR=rtrim(shell_exec("dirname $SCRIPTNAME"));
 require("$ROOTDIR/etc/configuration.php");
+setlocale(LC_TIME,"es_ES.UTF-8");
 
 ////////////////////////////////////////////////////////////////////////
 //OTHER CONFIGURATION
@@ -45,17 +46,15 @@ $content.=<<<C
   <meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
 
   <!-- DATERANGE PICKER -->
+  <!-- http://tamble.github.io/jquery-ui-daterangepicker/ -->
   <link href="util/jquery-ui/jquery-ui.min.css" 
 	rel="stylesheet">
   <link href="util/daterangepicker/jquery.comiseo.daterangepicker.css" 
 	rel="stylesheet">
-
   <script src="util/jquery-ui/jquery.min.js"></script>
   <script src="util/jquery-ui/jquery-ui.min.js"></script>
-  <script src="util/jquery-ui/moment.min.js"></script>
-
+  <script src="util/jquery-ui/moment.min-locales.js"></script>
   <script src="util/daterangepicker/jquery.comiseo.daterangepicker.js"></script>
-  
   <script>
     function selectCorta(selection){
 	if($(selection).val().localeCompare("noremunerada")==0){
@@ -67,15 +66,8 @@ $content.=<<<C
 	}
     }
   </script>
-  
 </head>
 <body>
-<input id="edate" name="range">
-<script>
-  $("#edate").daterangepicker({
-  initialText : 'Select period...'
-  });
-</script>
 C;
 
 ////////////////////////////////////////////////////////////////////////
@@ -451,11 +443,29 @@ M;
     $fields_comisiones="";
     $values_comisiones="";
     $fval_comisiones="";
+    $fecharango=str2Array($fecharango);
     foreach($FIELDS_COMISIONES as $field){
       $fieldn=$field;
       if($field=="extra1"){$field="diaspermiso";}
       $value=$$field;
-      //echo "$field, $value<br/>";
+      if($field=="fechaini"){
+	$value=$fecharango["start"];
+      }
+      if($field=="fechafin"){
+	$value=$fecharango["end"];
+      }
+      if($field=="fecha"){
+	$fechaini=$fecharango["start"];
+	$fechainistr=ucwords(strftime("%B %e de %Y",strtotime($fechaini)));
+	$fechafin=$fecharango["end"];
+	$fechafinstr=ucwords(strftime("%B %e de %Y",strtotime($fechafin)));
+	$fechainistr=preg_replace("/De/","de",$fechainistr);
+	$fechafinstr=preg_replace("/De/","de",$fechafinstr);
+	$value="$fechainistr";
+	if($fechainistr!=$fechafinstr){
+	  $value.=" a $fechafinstr";
+	}
+      }
       $fields_comisiones.="$fieldn,";
       $values_comisiones.="'$value',";
       $fval_comisiones.="$fieldn='$value',";
@@ -1197,6 +1207,7 @@ R;
   if($aprobacion=="No"){
     $generar="<i>No aprobada</i>";
   }
+  $fecharango_menu=fechaRango("fecharango",$fechaini,$fechafin);
 
 $content.=<<<C
   <a href="?$USERSTRING&action=Consultar">Lista de Solicitudes</a> | <a href="?$USERSTRING">Salir</a>
@@ -1332,7 +1343,15 @@ $diasdisponible $comment
 <!---------------------------------------------------------------------->
 <tr>
 <td>Fechas de la comisión:</td>
-<td><input $disp3 type="text" name="fecha" value="$fecha" size=30></td>
+<td>
+$fecharango_menu
+</td>
+</tr>
+<tr $disp1>
+<td>Fechas en texto:</td>
+<td>
+<input $disp3 type="text" name="fecha" value="$fecha" size=30>
+</td>
 </tr>
 <tr class=ayuda>
 <td colspan=2>Indique las fechas de la comisión (fecha inicial - fecha
@@ -1693,7 +1712,7 @@ if($action=="Consultar"){
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   //VERIFY PERMISSIONS
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  $fields="comisionid,cedula,estado,actualizacion,actualiza,aprobacion,institutoid,tipocom,vistobueno,qcumplido,cumplido1,cumplido2";
+  $fields="comisionid,cedula,estado,actualizacion,actualiza,aprobacion,institutoid,tipocom,vistobueno,qcumplido,cumplido1,cumplido2,fechaini,fechafin";
   $solicitudes=mysqlCmd("select $fields,TIMESTAMP(radicacion) as radicacion from Comisiones $where order by radicacion desc;",$qout=1);
   if($solicitudes==0){$nsolicitudes=0;}
   else{$nsolicitudes=count($solicitudes);}
@@ -1708,6 +1727,7 @@ $table=<<<T
   <td>Estado</td>
   <td>Instituto</td>
   <td width=40%>Solicitante</td>
+  <td width=40%>Inicio y Fin</td>
   <td>Acciones</td>
   <td>Descargas</td>
   <td>Otras</td>
@@ -1725,6 +1745,8 @@ T;
     $testado=$ESTADOS[$testadox];
     $ttipocomx=$comision['tipocom'];
     $ttipocom=$TIPOSCOM[$ttipocomx];
+    $tfechaini=$comision['fechaini'];
+    $tfechafin=$comision['fechafin'];
 
     $estadocolor=$COLORS[$testadox];
     if($ttipocomx=="noremunerada"){
@@ -1803,6 +1825,7 @@ $table.=<<<T
   <td>$testado</td>
   <td>$tinstituto</td>
   <td>$tcedula, $tnombre</td>
+  <td>$tfechaini<br/>$tfechafin</td>
   <td>
     $generar
   </td>
