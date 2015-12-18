@@ -141,4 +141,94 @@ function array2Globals($list)
   }
 }
 
+function fechaRango($id,$start="",$end=""){
+$code=<<<C
+<input $disp3 id="fecharango" name="fecharango">
+<script>
+    $("#$id").daterangepicker({
+        presetRanges: [{
+            text: 'Hoy',
+	    dateStart: function() { return moment() },
+	    dateEnd: function() { return moment() }
+	}, {
+            text: 'Mañana',
+	    dateStart: function() { return moment().add('days', 1) },
+	    dateEnd: function() { return moment().add('days', 1) }
+	}, {
+            text: 'La próxima semana',
+            dateStart: function() { return moment().add('weeks', 1).startOf('week') },
+            dateEnd: function() { return moment().add('weeks', 1).endOf('week') }
+	}],
+	datepickerOptions: {
+            minDate: 0,
+            maxDate: null
+        },
+	applyOnMenuSelect: false,
+	initialText : 'Seleccione el rango de fechas...',
+	applyButtonText : 'Escoger',
+	clearButtonText : 'Limpiar',
+	cancelButtonText : 'Cancelar',
+    });
+    jQuery(function($){
+        $.datepicker.regional['es'] = {
+            closeText: 'Cerrar',
+            prevText: '&#x3c;Ant',
+            nextText: 'Sig&#x3e;',
+            currentText: 'Hoy',
+            monthNames: ['Enero','Febrero','Marzo','Abril','Mayo','Junio',
+                         'Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'],
+            monthNamesShort: ['Ene','Feb','Mar','Abr','May','Jun',
+                              'Jul','Ago','Sep','Oct','Nov','Dic'],
+            dayNames: ['Domingo','Lunes','Martes','Mi&eacute;rcoles','Jueves','Viernes','S&aacute;bado'],
+            dayNamesShort: ['Dom','Lun','Mar','Mi&eacute;','Juv','Vie','S&aacute;b'],
+            dayNamesMin: ['Do','Lu','Ma','Mi','Ju','Vi','S&aacute;'],
+            weekHeader: 'Sm',
+            dateFormat: 'dd/mm/yy',
+            firstDay: 1,
+            isRTL: false,
+            showMonthAfterYear: false,
+            yearSuffix: ''};
+        $.datepicker.setDefaults($.datepicker.regional['es']);
+    });
+C;
+
+  if(!isBlank($start)){
+$code.=<<<C
+  $("#$id").daterangepicker({
+      onOpen: $("#$id").daterangepicker(
+          "setRange",
+          {start:$.datepicker.parseDate("yy-mm-dd","$start"),
+           end:$.datepicker.parseDate("yy-mm-dd","$end")}
+      )
+  });
+C;
+  }else{
+$code.=<<<C
+  var today = moment().toDate();
+  var tomorrow = moment().add('days', 1).startOf('day').toDate();
+  $("#$id").daterangepicker({
+    onOpen: $("#$id").daterangepicker("setRange",{start: today,end: tomorrow})
+    });
+C;
+  }
+    
+  $code.="</script>";
+  return $code;
+}
+
+function str2Array($string)
+{
+  $string=preg_replace("/[{}\"]/","",$string);
+  $comps=preg_split("/,/",$string);
+  
+  $list=array();
+  foreach($comps as $comp){
+    $parts=preg_split("/:/",$comp);
+    $key=$parts[0];
+    $value=$parts[1];
+    $list["$key"]=$value;
+  }
+  return $list;
+}
+
 ?>
