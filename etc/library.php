@@ -122,19 +122,23 @@ function getComisionInfo($comisionid)
   foreach($FIELDS_COMISIONES as $field){
     if($field=="extra1"){$field="diaspermiso";}
     $comision["$field"]=$results[$field];
-    $GLOBALS["$field"]=$results[$field];
   }
   $cedula=$comision["cedula"];
   $profesor=mysqlCmd("select * from Profesores where cedula='$cedula';");
   foreach($FIELDS_PROFESORES as $field){
     $comision["$field"]=$profesor[$field];
-    $GLOBALS["$field"]=$profesor[$field];
   }
   $institutoid=$comision["institutoid"];
   $instituto=mysqlCmd("select * from Institutos where institutoid='$institutoid';");
   $comision["instituto"]=$instituto["instituto"];
-  $GLOBALS["instituto"]=$instituto["instituto"];
   return $comision;
+}
+
+function array2Globals($list)
+{
+  foreach(array_keys($list) as $key){
+    $GLOBALS["$key"]=$list["$key"];
+  }
 }
 
 ?>
