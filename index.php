@@ -205,7 +205,7 @@ M;
     //UPDATE DATABASE
     $qemail=1;
     if($update!="set "){
-      $update.="qcumplido='1',infocumplido='$infocumplido'";
+      $update.="qcumplido='1',infocumplido='$infocumplido',estado='cumplida'";
       $sql="update Comisiones $update where comisionid='$comisionid';";
       echo "<pre>$sql</pre>";
       mysqlCmd($sql);
@@ -1639,7 +1639,8 @@ if($action=="Cumplido"){
     if($i==0){
       $status="checked readonly";
     }
-    if(preg_match("/$emailpersona;/",$destinoscumplido)){
+
+    if(preg_match("/$emailpersona/",$destinoscumplido)){
       if(preg_match("/$emailpersona::([^::]+)/",$confirmacumplido,$matches)){
 	$dateconfirm=$matches[1];
 	$confirm="<sub style='color:green'>[confirmado en $dateconfirm]</sub>";
@@ -1838,27 +1839,31 @@ T;
     //GENERANDO ACCIONES
     $borrar="";
     $cumplido="";
-    if($taprobacion=="Si" and 
-       $tqcumplido==0 and
-       $ttipocomx!="noremunerada"){
-      $cumplido="<!-- -------------------------------------------------- -->
+    if($ttipocomx!="noremunerada"){
+      if($taprobacion=="Si" and 
+	 $tqcumplido==0){
+	$cumplido="<!-- -------------------------------------------------- -->
   <a href=?$USERSTRING&comisionid=$tcomisionid&action=Cumplido>
   Subir Cumplido</a>";
-    }
-    if($tqcumplido>0 and
-       $qperm){
-      $cumplido="<!-- -------------------------------------------------- -->
+      }
+      if($tqcumplido>0 and
+	 $qperm){
+	$cumplido="<!-- -------------------------------------------------- -->
 <a href=?$USERSTRING&comisionid=$tcomisionid&action=Cumplido>Modificar Cumplido</a>";
-    }
-    else if($qperm==0){
-      $cumplido="<!-- -------------------------------------------------- -->
+      }
+      else if($qperm==0){
+	$cumplido="<!-- -------------------------------------------------- -->
 <a href=?$USERSTRING&comisionid=$tcomisionid&action=Cumplido>Actualizar Cumplido</a>";
+      }
+      if($taprobacion!="Si" and $tvistobueno!="Si"){
+	$cumplido="";
+      }
     }
+
     if($taprobacion!="Si" and $tvistobueno!="Si"){
       $borrar="<!-- -------------------------------------------------- -->
   <a href=?$USERSTRING&comisionid=$tcomisionid&operation=Borrar&action=Consultar>
   Borrar</a>";
-      $cumplido="";
     }
 
     //CREA TABLA
@@ -1915,8 +1920,9 @@ $error
   <td style=background:#FFFF99>Comisión Solicitada</td>
   <td style=background:#FFCC99>Permiso Solicitado</td>
   <td style=background:#99CCFF>Visto Bueno</td>
-  <td style=background:#00CC99>Comisión Aprobada</td>
   <td style=background:#33CCCC>Permiso Aprobado</td>
+  <td style=background:#00CC99>Comisión Aprobada</td>
+  <td style=background:lightgray>Comisión Cumplida</td>
   </tr></table>
 <p></p>
 $table
