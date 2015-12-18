@@ -12,6 +12,7 @@ require("$ROOTDIR/etc/configuration.php");
 ////////////////////////////////////////////////////////////////////////
 //OTHER CONFIGURATION
 ////////////////////////////////////////////////////////////////////////
+/*
 $DESTINATARIOS_CUMPLIDOS=array(
    array("Secretaria del Decanato","Luz Mary Castro","luz.castro@udea.edu.co"),
    array("Secretaria del CIEN","Maricela Botero","maricela.boteros@udea.edu.co"),
@@ -21,6 +22,17 @@ $DESTINATARIOS_CUMPLIDOS=array(
    array("Centro de Investigaciones SIU","Ana Eugenia","aeugenia.restrepo@udea.edu.co"),
    array("Fondo de Vicerrectoría de Docencia","Sandra Perez","sandra.perez@udea.edu.co")
 );
+*/
+
+$DESTINATARIOS_CUMPLIDOS=array(
+   array("Secretaria del Decanato","Luz Mary Castro","pregradofisica@udea.edu.co"),
+   array("Secretaria del CIEN","Maricela Botero","zuluagajorge@gmail.com"),
+   array("Programa de Extensión","Natalia López","astronomia.udea@gmail.com"),
+   array("Fondo de Pasajes Internacionales","Mauricio Toro","jorge.zuluaga@udea.edu.co"),
+   array("Vicerrectoria de Investigación","Mauricio Toro","newton@udea.edu.co"),
+   array("Centro de Investigaciones SIU","Ana Eugenia","newton@udea.edu.co"),
+   array("Fondo de Vicerrectoría de Docencia","Sandra Perez","newton@udea.edu.co")
+);
 
 ////////////////////////////////////////////////////////////////////////
 //HEADER
@@ -28,10 +40,22 @@ $DESTINATARIOS_CUMPLIDOS=array(
 $content.=<<<C
 <html>
 <head>
-  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
-  <script src="etc/jquery.js"></script>
   $style
 
+  <meta http-equiv="Content-Type" content="text/html;charset=UTF-8" />
+
+  <!-- DATERANGE PICKER -->
+  <link href="util/jquery-ui/jquery-ui.min.css" 
+	rel="stylesheet">
+  <link href="util/daterangepicker/jquery.comiseo.daterangepicker.css" 
+	rel="stylesheet">
+
+  <script src="util/jquery-ui/jquery.min.js"></script>
+  <script src="util/jquery-ui/jquery-ui.min.js"></script>
+  <script src="util/jquery-ui/moment.min.js"></script>
+
+  <script src="util/daterangepicker/jquery.comiseo.daterangepicker.js"></script>
+  
   <script>
     function selectCorta(selection){
 	if($(selection).val().localeCompare("noremunerada")==0){
@@ -43,9 +67,15 @@ $content.=<<<C
 	}
     }
   </script>
-
+  
 </head>
 <body>
+<input id="edate" name="range">
+<script>
+  $("#edate").daterangepicker({
+  initialText : 'Select period...'
+  });
+</script>
 C;
 
 ////////////////////////////////////////////////////////////////////////
@@ -116,7 +146,7 @@ if(isset($operation)){
 
     //GET INFORMATION ABOUT COMISION
     $comision=getComisionInfo($comisionid);
-    $suffix="${cedula}_${comisionid}";
+    $suffix=$comision["cedula"]."_${comisionid}";
 
     //FILES
     $file1=$_FILES["file_cumplido1"];
@@ -132,7 +162,7 @@ if(isset($operation)){
       shell_exec("cp $tmp comisiones/$comisionid/'$file_cumplido1'");
       $update.="cumplido1='$name',";
       $error.=errorMessage("Archivo de Cumplido '$name' subido...");
-      $cumplido1=$name;
+      $comision["cumplido1"]=$name;
     }
     if($file2["size"]>0){
       $name=$file2["name"];
@@ -141,52 +171,125 @@ if(isset($operation)){
       shell_exec("cp $tmp comisiones/$comisionid/'$file_cumplido2'");
       $update.="cumplido2='$name',";
       $error.=errorMessage("Archivo de Cumplido '$name' subido...");
-      $cumplido2=$name;
+      $comision["cumplido2"]=$name;
     }
 
     //UPDATE DATABASE
     $qemail=1;
     if($update!="set "){
-      $update.="qcumplido='1'";
+      $update.="qcumplido='1',infocumplido='$infocumplido'";
       $sql="update Comisiones $update where comisionid='$comisionid';";
+      echo "<pre>$sql</pre>";
       mysqlCmd($sql);
+      $comision["qcumplido"]=1;
+      $comision["destinoscumplido"]=$DESTINATARIOS_CUMPLIDOS[0][2];
+      $comision["infocumplido"]=$infocumplido;
     }
 
+    //NOTHING HAS BEEN ADDED
     if($comision["qcumplido"]==0 and $update=="set "){
-      $error=errorMessage("No se ha subido ningún archivo.");
+      $error.=errorMessage("No se ha subido ningún archivo.");
       $qemail=0;
     }
 
+    //NINGUN ARCHIVO SE HA CAMBIADO
     if($comision["qcumplido"]==1 and $update=="set "){
-      $error=errorMessage("No se han cambiado los archivos.");
+      $error.=errorMessage("No han cambiado los archivos.");
+    }
+
+    //CONVERT TO GLOBAL
+    array2Globals($comision);
+
+    //ADD NEW E-MAILS
+    $emails=preg_split("/\s*,\s*/",$otros_destinatarios);
+    $i=count($DESTINATARIOS_CUMPLIDOS);
+    foreach($emails as $demail){
+      if(isBlank($demail)){continue;}
+      array_push($DESTINATARIOS_CUMPLIDOS,array($demail,$demail,$demail));
+      array_push($destinatarios,$i);
+      $i++;
+    }
+
+    //ADD E-MAILS TO DATABASE
+    $destintxt="destinoscumplido='$destinoscumplido";
+    $i=-1;
+    foreach($DESTINATARIOS_CUMPLIDOS as $destino){
+	$i++;
+	$index=array_search($i,$destinatarios);
+	if(isBlank($index)){continue;}
+
+	$dependencia=$destino[0];
+	$persona=$destino[1];
+	$emailpersona=$destino[2];
+
+	if(!preg_match("/$emailpersona/",$destinoscumplido)){
+	  $destintxt.="$emailpersona;";
+	}
+    }
+    $destintxt.="'";
+    $sql="update Comisiones set $destintxt where comisionid='$comisionid';";
+    mysqlCmd($sql);
+
+    //CHECK CONFIRMATION E-MAIL
+    if(!isset($envia)){
+      $error.=errorMessage("No se han enviado correos de notificación.");
+      $qemail=0;
     }
 
     //SEND E-MAIL
     if($qemail){
+      
+      //ATACHMENTS
       $ttipocom=$TIPOSCOM[$comision["tipocom"]];
 
       $cumplidos="<ul>";
       if(!isBlank($cumplido1)){
-	$cumplidos.="<li><a href='$URL/comisiones/$comisionid/Cumplido1_${suffix}_$cumplido1' download>$cumplido1</a></li>";
+	$cumplidos.="<li><b>Cumplido 1</b>: <a href='$URL/comisiones/$comisionid/Cumplido1_${suffix}_$cumplido1' download>$cumplido1</a></li>";
       }
       if(!isBlank($cumplido2)){
-	$cumplidos.="<li><a href='$URL/comisiones/$comisionid/Cumplido2_${suffix}_$cumplido2' download>$cumplido2</a></li>";
+	$cumplidos.="<li><b>Cumplido 2</b>: <a href='$URL/comisiones/$comisionid/Cumplido2_${suffix}_$cumplido2' download>$cumplido2</a></li>";
       }
       $cumplidos.="</ul>";
 
+      //MESSAGE HEADER
+      $subject="[Cumplido FCEN] $nombre ha enviado un cumplido por la actividad realizada en $fecha.";
+      $headers="";
+      $headers.="From: noreply@udea.edu.co\r\n";
+      $headers.="Reply-to: noreply@udea.edu.co\r\n";
+      $headers.="MIME-Version: 1.0\r\n";
+      $headers.="MIME-Version: 1.0\r\n";
+      $headers.="Content-type: text/html\r\n";
+
+      $i=-1;
+      $destintxt="destinoscumplido='$destinoscumplido";
+      foreach($DESTINATARIOS_CUMPLIDOS as $destino){
+	$i++;
+	$index=array_search($i,$destinatarios);
+	if(isBlank($index)){continue;}
+
+	$dependencia=$destino[0];
+	$persona=$destino[1];
+	$emailpersona=$destino[2];
+
+	$url="$URL/?operation=confirmacumplido&comisionid=$comisionid&email=$emailpersona";
+	$linkconfirmacion="<a href=$url>$url</a>";
+	
 $message=<<<M
 <p>
+Apreciado(a) $persona,
+
+<p>
 El(La) Profesor(a) <b>$nombre</b> identificado con
-documento <b>$cedula</b> del <b>$instituto</b>, ha concluido una <b>$ttipocom</b> con el
-objectivo de <b>$actividad</b> que se realizon en
-fecha(s) <b>$fecha</b>.  
+documento <b>$cedula</b> del <b>$instituto</b>, ha concluido
+una <b>$ttipocom</b> con el objetivo de <b>$actividad</b>.  La
+actividad se realizó en la(s) fecha(s) <b>$fecha</b>.
 </p>
 
 <p>
-Como parte de los compromisos con su dependencia el profesor ha subido
-al <b>Sistema de Comisiones de la Facultad</b>, el(los) siguiente(s)
-document(s) que certifican la realización de la actividad realizada
-por el profesor (cumplidos).
+Como parte de los compromisos con su dependencia (<b>$dependencia</b>)
+el profesor ha subido al <b>Sistema de Comisiones de la Facultad</b>,
+el(los) siguiente(s) document(s) que certifican la realización de la
+actividad realizada (cumplidos).
 </p>
 
 <p>
@@ -198,7 +301,7 @@ $cumplidos
 <p>
 La siguiente información de interés fue adicionalmente provista por el
 profesor para su conocimiento:
-<blockquote>$infocumplido</blockquote>
+<blockquote><i>$infocumplido</i></blockquote>
 </p>
 
 <p style="color:red">
@@ -206,21 +309,18 @@ Le solicitamos amablemente confirmar la recepción de esta
 documentación haciendo click en este enlace: $linkconfirmacion.
 </p>
 
+<p>Atentamente,</p>
+
 <p>
 <b>Sistema de Solicitud de Comisiones<br/>
 Decanato, FCEN</b>
 </p>
 M;
-
-//echo "$message<br/>";
-
-      $i=0;
-      foreach($DESTINATARIOS_CUMPLIDOS as $destino){
-	
+        //echo "$message<br/>";
+        sendMail($emailpersona,$subject,$message,$headers);
+	$error.=errorMessage("Mensaje enviado a $emailpersona");
       }
-
     }
-
   }
 
   //////////////////////////////////////////////////////////////
@@ -1440,21 +1540,10 @@ C;
 ////////////////////////////////////////////////////////////////////////
 if($action=="Cumplido"){
 
-  $results=mysqlCmd("select * from Comisiones where comisionid='$comisionid'");
-  foreach($FIELDS_COMISIONES as $field){
-    //$$field=utf8_encode($results[$field]);
-    $fieldn=$field;
-    if($field=="extra1"){$field="diaspermiso";}
-    $$field=$results[$fieldn];
-  }
-  foreach($FIELDS_PROFESORES as $field){
-    //$$field=utf8_encode($results[$field]);
-    $fieldn=$field;
-    if($field=="extra1"){$field="diasdisponible";}
-    if($field=="extra2"){$field="ano";}
-    $$field=$results[$fieldn];
-    //echo "FIELD = $field, VALUE = ".$$field."<br/>";
-  }
+  $comision=getComisionInfo($comisionid);
+  array2Globals($comision);
+
+  $suffix="${cedula}_${comisionid}";
 
   //INFORMATION CUMPLIDO
   if(isBlank($infocumplido)){
@@ -1464,6 +1553,25 @@ if($action=="Cumplido"){
   //DESTINATARIOS
   $destinatarios="";
   $i=0;
+
+  //ALL MAILS
+  $allmails="";
+  foreach($DESTINATARIOS_CUMPLIDOS as $destino){
+    $dependencia=$destino[0];
+    $persona=$destino[1];
+    $emailpersona=$destino[2];
+    $allmails.="$emailpersona;";
+  }
+
+  //CHECK PREVIOUS E-MAILS
+  $emails=preg_split("/\s*;\s*/",$destinoscumplido);
+  foreach($emails as $demail){
+    if(isBlank($demail)){continue;}
+    if(!preg_match("/$demail;/",$allmails)){
+      array_push($DESTINATARIOS_CUMPLIDOS,array($demail,$demail,$demail));
+    }
+  }
+
   foreach($DESTINATARIOS_CUMPLIDOS as $destino){
     $dependencia=$destino[0];
     $persona=$destino[1];
@@ -1473,9 +1581,12 @@ if($action=="Cumplido"){
     if($i==0){
       $status="checked readonly";
     }
+    if(preg_match("/$emailpersona;/",$destinoscumplido)){
+      $status="checked readonly";
+    }
 
 $destinatarios.=<<<D
-<input type="checkbox" name="destinatarios" value="$i" $status><a href="mailto:$persona <$emailpersona">$dependencia</a><br/>
+<input type="checkbox" name="destinatarios[]" value="$i" $status><a href="mailto:$persona <$emailpersona">$dependencia</a><br/>
 D;
     $i++;
   }
@@ -1499,8 +1610,8 @@ $error
   <tr>
     <td style="text-align:right"><b>Cumplido 1</b>:</td>
     <td>
-      <input type="file" name="file_cumplido1" value="$file_cumplido1"><br/>
-      Archivo: <a href="comisiones/$comisionid/$cumplido1" target="_blank">$cumplido1</a>
+      <input type="file" name="file_cumplido1" value="$cumplido1"><br/>
+      Archivo: <a href="comisiones/$comisionid/Cumplido1_${suffix}_$cumplido1" target="_blank" download>$cumplido1</a>
       <input type="hidden" name="cumplido1" value="$cumplido1">
     </td>
   </tr>
@@ -1508,8 +1619,8 @@ $error
   <tr>
     <td style="text-align:right"><b>Cumplido 2</b>:</td>
     <td>
-      <input type="file" name="file_cumplido2" value="$file_cumplido2"><br/>
-      Archivo: <a href="comisiones/$comisionid/$cumplido2" target="_blank">$cumplido2</a>
+      <input type="file" name="file_cumplido2" value="$cumplido2"><br/>
+      Archivo: <a href="comisiones/$comisionid/Cumplido2_${suffix}_$cumplido2" target="_blank" download>$cumplido2</a>
       <input type="hidden" name="cumplido2" value="$cumplido2">
     </td>
   </tr>
@@ -1539,7 +1650,20 @@ $error
     </td>
   </tr>
 
-  <tr><td></td><td style="text-align:left">
+  <tr>
+  <td colspan=2 style="text-align:center">
+  <hr/>
+  </td>
+  </tr>
+
+  <tr>
+  <td colspan=2 style="text-align:center">
+  ¿Confirma que desea enviar correos de notificación? 
+  <input type="checkbox" name="envia" value="Si">Si
+  </td>
+  </tr>
+
+  <tr><td colspan=2 style="text-align:center">
       <input type="submit" name="operation" value="Cumplir">
   </td></tr>
 
@@ -1663,7 +1787,7 @@ T;
 <a href=?$USERSTRING&comisionid=$tcomisionid&action=Cumplido>Modificar Cumplido</a>";
     }else if($qperm==0){
       $cumplido="<!-- -------------------------------------------------- -->
-<a href=?$USERSTRING&comisionid=$tcomisionid&action=Cumplido>Cumplido Entregado</a>";
+<a href=?$USERSTRING&comisionid=$tcomisionid&action=Cumplido>Actualizar Cumplido</a>";
     }
 
 $table.=<<<T
