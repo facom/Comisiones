@@ -21,7 +21,7 @@ $DESTINATARIOS_CUMPLIDOS=array(
    array("Fondo de Pasajes Internacionales","Mauricio Toro","fondosinvestigacion@udea.edu.co"),
    array("Vicerrectoria de Investigación","Mauricio Toro","tramitesinvestigacion@udea.edu.co"),
    array("Centro de Investigaciones SIU","Ana Eugenia","aeugenia.restrepo@udea.edu.co"),
-   array("Fondo de Vicerrectoría de Docencia","Sandra Perez","sandra.perez@udea.edu.co")
+   array("Fondos de Vicerrectoría de Docencia","Sandra Monsalve","programacionacademica@udea.edu.co")
 );
 */
 
@@ -32,7 +32,7 @@ $DESTINATARIOS_CUMPLIDOS=array(
    array("Fondo de Pasajes Internacionales","Mauricio Toro","jorge.zuluaga@udea.edu.co"),
    array("Vicerrectoria de Investigación","Mauricio Toro","newton@udea.edu.co"),
    array("Centro de Investigaciones SIU","Ana Eugenia","newton@udea.edu.co"),
-   array("Fondo de Vicerrectoría de Docencia","Sandra Perez","newton@udea.edu.co")
+   array("Fondos de Vicerrectoría de Docencia","Sandra Perez","newton@udea.edu.co")
 );
 
 ////////////////////////////////////////////////////////////////////////
@@ -94,6 +94,7 @@ C;
 $qerror=0;
 $inputform=1;
 $error="";
+$foot="";
 
 //BASIC PERMISSION
 $qperm=0;
@@ -1149,9 +1150,21 @@ if($action=="Solicitar"){
   $disabled="readonly='readonly'";
   
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  //ESTADO
+  //CHECK CUMPLIDOS PENDIENTES
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
+  $result=mysqlCmd("select comisionid from Comisiones where tipocom<>'noremunerada' and cedula='$cedula' and fechafin<now() and qcumplido+0=0;");
+  if($result!=0){
+    $foot="<script>alert('Señor(a) Profesor(a), usted tiene Comisiones que ya concluyeron y que están a la espera de cumplido.  Por favor póngase al día con los cumplidos.')</script>";
+    $faltacumplido="";
+    foreach(array_keys($result) as $key){
+      if(preg_match("/^\d+$/",$key)){continue;}
+      $comisionpend=$result[$key];
+      $faltacumplido.="<a href='?$USERSTRING&comisionid=$comisionpend&action=Cumplido' target='_blank'>$comisionpend</a>,";
+    }
+    $faltacumplido=trim($faltacumplido,",");
+    $error=errorMessage("Comisiones a la espera de cumplido: $faltacumplido.");
+  }
+  
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   //CHECK RESOLUTION
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -1670,7 +1683,7 @@ $error
 <table border=0px width=80%>
   <tr><td width=20% style="text-align:right"><b>Comisión</b>:</td><td width=30%>$comisionid</td></tr>
   <tr><td style="text-align:right"><b>Fecha Resolución</b>:</td><td>$fecharesolucion</td></tr>
-  <tr><td style="text-align:right"><b>Fechas de la Comisión</b>:</td><td>$fecha</td></tr>
+  <tr><td style="text-align:right"><b>Fechas de la Comisión</b>:</td><td>$fechaini a $fechafin</td></tr>
 
   <tr>
     <td style="text-align:right"><b>Cumplido 1</b>:</td>
@@ -1793,10 +1806,17 @@ T;
     $ttipocom=$TIPOSCOM[$ttipocomx];
     $tfechaini=$comision['fechaini'];
     $tfechafin=$comision['fechafin'];
-
+    
+    $tafter=mysqlCmd("select UNIX_TIMESTAMP(now())-UNIX_TIMESTAMP(fechafin) from Comisiones where comisionid='$tcomisionid'")[0];
+    
     $estadocolor=$COLORS[$testadox];
     if($ttipocomx=="noremunerada"){
       $estadocolor=$COLORS[$testadox."_noremunerada"];
+    }
+    if($tafter>0 and 
+       $testadox=="aprobada" and
+       $ttipocomx!="noremunerada"){
+      $estadocolor="pink";
     }
 
     $tradicacion=$comision['radicacion'];
@@ -1840,12 +1860,15 @@ T;
     $borrar="";
     $cumplido="";
     if($ttipocomx!="noremunerada"){
+
       if($taprobacion=="Si" and 
-	 $tqcumplido==0){
+	 $tqcumplido==0 and
+	 $tafter>0){
 	$cumplido="<!-- -------------------------------------------------- -->
   <a href=?$USERSTRING&comisionid=$tcomisionid&action=Cumplido>
   Subir Cumplido</a>";
       }
+
       if($tqcumplido>0 and
 	 $qperm){
 	$cumplido="<!-- -------------------------------------------------- -->
@@ -1917,12 +1940,15 @@ $error
 <p></p>
   <table border=0px><tr>
   <td>Convenciones:</td>
+  </tr>
+  <tr>
   <td style=background:#FFFF99>Comisión Solicitada</td>
   <td style=background:#FFCC99>Permiso Solicitado</td>
   <td style=background:#99CCFF>Visto Bueno</td>
   <td style=background:#33CCCC>Permiso Aprobado</td>
   <td style=background:#00CC99>Comisión Aprobada</td>
   <td style=background:lightgray>Comisión Cumplida</td>
+  <td style=background:pink>Falta Cumplido</td>
   </tr></table>
 <p></p>
 $table
@@ -2165,6 +2191,7 @@ $content.=<<<C
 <div style="font-size:10px;font-style:italic">
 Desarrollado por <a href="mailto:jorge.zuluaga@udea.edu.co">Jorge I. Zuluaga</a> (C) 2015.
 </div>
+$foot
 </body>
 </html>
 C;
