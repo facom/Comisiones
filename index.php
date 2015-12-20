@@ -1,9 +1,14 @@
 <?php
-$content="";
+////////////////////////////////////////////////////////////////////////
+//SITE UNDER MAINTAINANCE
+////////////////////////////////////////////////////////////////////////
+//MAINTAINANCE
+$QMAINTAINANCE=0;
 
 ////////////////////////////////////////////////////////////////////////
 //LOAD CONFIGURATION
 ////////////////////////////////////////////////////////////////////////
+$content="";
 $HOST=$_SERVER["HTTP_HOST"];
 $SCRIPTNAME=$_SERVER["SCRIPT_FILENAME"];
 $ROOTDIR=rtrim(shell_exec("dirname $SCRIPTNAME"));
@@ -11,9 +16,20 @@ require("$ROOTDIR/etc/configuration.php");
 setlocale(LC_TIME,"es_ES.UTF-8");
 
 ////////////////////////////////////////////////////////////////////////
+//TEST SITE
+////////////////////////////////////////////////////////////////////////
+//CHECK IF THIS IS THE MAIN SITE OR THE TEST SITE
+$QTEST=0;
+if($HOST=="localhost"){$QTEST=1;}
+
+////////////////////////////////////////////////////////////////////////
+//HEADER
+////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////
 //OTHER CONFIGURATION
 ////////////////////////////////////////////////////////////////////////
-/*
+if(!$QTEST){
 $DESTINATARIOS_CUMPLIDOS=array(
    array("Secretaria del Decanato","Luz Mary Castro","luz.castro@udea.edu.co"),
    array("Secretaria del CIEN","Maricela Botero","maricela.boteros@udea.edu.co"),
@@ -23,8 +39,7 @@ $DESTINATARIOS_CUMPLIDOS=array(
    array("Centro de Investigaciones SIU","Ana Eugenia","aeugenia.restrepo@udea.edu.co"),
    array("Fondos de Vicerrectoría de Docencia","Sandra Monsalve","programacionacademica@udea.edu.co")
 );
-*/
-
+}else{
 $DESTINATARIOS_CUMPLIDOS=array(
    array("Secretaria del Decanato","Luz Mary Castro","pregradofisica@udea.edu.co"),
    array("Secretaria del CIEN","Maricela Botero","zuluagajorge@gmail.com"),
@@ -34,10 +49,104 @@ $DESTINATARIOS_CUMPLIDOS=array(
    array("Centro de Investigaciones SIU","Ana Eugenia","newton@udea.edu.co"),
    array("Fondos de Vicerrectoría de Docencia","Sandra Perez","newton@udea.edu.co")
 );
+}
+
+$maintainancetxt=<<<M
+<center>
+<div style='background:lightgray;width:80%;font-size:18px;padding:50px'>
+El Sistema de Comisiones esta en mantenimiento.  Esperamos ponerlo en
+línea nuevamente a la mayor brevedad posible.
+</div>
+</center>
+M;
 
 ////////////////////////////////////////////////////////////////////////
 //HEADER
 ////////////////////////////////////////////////////////////////////////
+//$QTEST=0;
+if(!$QTEST){
+$bannercolor="green";
+$banner=<<<BANNER
+<div id="diagonal_label">
+<a href="ChangesLog" target="_blank">
+<span><b>&nbsp;</b></span><br /><span>Versión Beta 1.0</span><br id='break' />
+<span></span>
+</a>
+</div>
+BANNER;
+}else{
+$bannercolor="blue";
+$banner=<<<BANNER
+<div id="diagonal_label">
+<a href="etc/cedulas-testsite.txt" target="_blank">
+<span><b>&nbsp;</b></span><br /><span>Sitio de Prueba</span><br id='break' /><span></span>
+</a>
+</div>
+BANNER;
+}
+
+$lstyle=<<<STYLE
+    #diagonal_label {
+    height:50px;
+    line-height:25px;
+    text-transform:uppercase;
+    font-family:sans-serif;
+    font-weight:bold;
+    text-align:center;
+    z-index: 20;
+    }
+
+    #diagonal_label a {
+    display:block;
+    height:100%;
+    color:#000;
+    text-decoration:none;
+    background: $bannercolor;
+    }
+
+    #diagonal_label span {
+    display:inline-block;
+    margin:0 10px;
+    }
+    #break {display:none;}
+
+    @media only screen and (min-width : 480px) {
+
+    #diagonal_label {
+    width: 400px;
+    height:70px;
+    position:fixed;
+    right:-120px;
+    top:42px;
+    line-height:20px;
+    z-index: 20;
+    }
+    
+    #diagonal_label a {
+    -webkit-transform: rotate(45deg);
+    -moz-transform: rotate(45deg);
+    -o-transform: rotate(45deg);
+    -ms-transform: rotate(45deg);
+    transform: rotate(45deg);
+    color: #fff;
+    }
+    
+    #diagonal_label span {
+    margin:0 3px;
+    }
+    
+    #diagonal_label b {
+    font-size:22px;
+    font-weight:normal;
+    display: inline-block;
+    padding-top: 6px;
+    }
+
+    #break { display: block; }
+    }
+STYLE;
+
+
 $content.=<<<C
 <html>
 <head>
@@ -66,8 +175,13 @@ $content.=<<<C
 	}
     }
   </script>
+  <style>
+  $lstyle
+  </style>
+
 </head>
 <body>
+$banner
 C;
 
 ////////////////////////////////////////////////////////////////////////
@@ -78,7 +192,7 @@ $content.=<<<C
 <tr>
 <td width=10%><image src="$LOGOUDEA/udea_fcen.jpg"/ height=120px></td>
 <td valign=bottom>
-  <b style='font-size:32'><a href=index.php?$USERSTRING>Solicitud de Comisiones</a></b><br/>
+  <b style='font-size:32'><a href=index.php>Solicitud de Comisiones</a></b><br/>
   <b style='font-size:24'>Decanato</b><br/>
   <b style='font-size:24'>Facultad de Ciencias Exactas y Naturales</b><br/>
   <b style='font-size:24'>Universidad de Antioquia</b><br/>
@@ -93,6 +207,8 @@ C;
 ////////////////////////////////////////////////////////////////////////
 $qerror=0;
 $inputform=1;
+$qinfousuario=1;
+$qblocksite=0;
 $error="";
 $foot="";
 
@@ -123,6 +239,10 @@ if($usercedula==$DIRECTORS["decanatura"] or
    $qmant){
   $qperm=2;
 }
+if($QMAINTAINANCE and $qperm<2){
+  $qblocksite=1;
+}
+//$qblocksite=1;
 
 ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
@@ -131,6 +251,59 @@ if($usercedula==$DIRECTORS["decanatura"] or
 ////////////////////////////////////////////////////////////////////////
 
 if(isset($operation)){
+
+  //////////////////////////////////////////////////////////////
+  //RECUPERA USUARIO
+  //////////////////////////////////////////////////////////////
+  if($operation=="Recupera"){
+    $result=mysqlCmd("select cedula from Profesores where email='$emailrecupera'");
+    if($result){
+      $cedula=$result["cedula"];
+$message=<<<M
+  Señor(a) Usuario,
+<p>
+  Su usuario en el Sistema de Comisiones es: <b>$cedula</b>.
+</p>
+<p>Regrese al Sistema de Comisiones usando <a href="$URL?usercedula=$cedula">este enlace</a>.</p>
+M;
+      sendShortMail($emailrecupera,"[Sistema de Comisiones] Recuperación de usuario",$message);
+$content.=<<<C
+<i style=color:blue>Hemos enviado un correo electrónico con su usuario.</i>
+C;
+    }else{
+$content.=<<<C
+<i style=color:red>Su correo no fue reconocido. Intente de nuevo.</i>
+C;
+    }
+  }
+
+  //////////////////////////////////////////////////////////////
+  //RECUPERA CONTRASEÑA
+  //////////////////////////////////////////////////////////////
+  if($operation=="Reinicia"){
+
+    $result=mysqlCmd("select cedula from Profesores where email='$emailrecupera' and cedula='$cedularecupera'");
+
+    if($result){
+      $cedula=$result["cedula"];
+      $result=mysqlCmd("update Profesores set pass=md5('$cedula') where cedula='$cedula'");
+$message=<<<M
+  Señor(a) Usuario,
+<p>
+  Su nueva contraseña en el Sistema de Comisiones es: <b>$cedula</b>.
+</p>
+<p>Regrese al Sistema de Comisiones usando <a href="$URL?usercedula=$cedula&userpass=$cedula">este enlace</a>.</p>
+M;
+      sendShortMail($emailrecupera,"[Sistema de Comisiones] Recuperación de contraseña",$message);
+$content.=<<<C
+<i style=color:blue>Hemos enviado un correo electrónico con su nueva contraseña.</i>
+C;
+    }else{
+$content.=<<<C
+<i style=color:red>La información provista no coincide con la que existe en el sistema. Intente de nuevo.</i>
+C;
+    }
+  }
 
   //////////////////////////////////////////////////////////////
   //CONFIRMA CUMPLIDO
@@ -145,7 +318,6 @@ if(isset($operation)){
     $now=mysqlCmd("select now();")[0];
     if(!preg_match("/$emailconfirma/",$confirmacumplido)){
       $sql="update Comisiones set confirmacumplido='$emailconfirma::$now;$confirmacumplido' where comisionid='$comisionid';";
-      echo "$sql<br/>";
       mysqlCmd($sql);
     }
 
@@ -211,7 +383,7 @@ M;
       echo "<pre>$sql</pre>";
       mysqlCmd($sql);
       $comision["qcumplido"]=1;
-      $comision["destinoscumplido"]=$DESTINATARIOS_CUMPLIDOS[0][2];
+      $comision["destinoscumplido"]=$DESTINATARIOS_CUMPLIDOS[0][2].";";
       $comision["infocumplido"]=$infocumplido;
     }
 
@@ -372,6 +544,7 @@ M;
     $fval_profesores="";
     foreach($FIELDS_PROFESORES as $field){
       $value=$$field;
+      if($field=="pass" and !isBlank($newpass)){$value=md5($newpass);}
       $fields_profesores.="$field,";
       $values_profesores.="'$value',";
       $fval_profesores.="$field='$value',";
@@ -995,11 +1168,15 @@ R;
 ////////////////////////////////////////////////////////////////////////
 if(isset($action)){
   $inputform=0;
-}
-
-if(isBlank($usercedula) and isset($action)){
- $inputform=1;
- $qerror=1;
+  if(isBlank($usercedula)){
+    $inputform=1;
+    $qerror=1;
+  }
+  if(preg_match("/recupera/",$action)){
+    $inputform=0;
+    $qinfousuario=0;
+    $qerror=1;
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -1015,7 +1192,7 @@ if(isset($usercedula) and isset($userpass)){
     $inputform=1;
     $qerror=1;
   }else{
-    if($userpass==$profesor["pass"]){
+    if(md5($userpass)==$profesor["pass"]){
       foreach(array_keys($profesor) as $field){
 	if(preg_match("/^\d+$/",$field)){continue;}
 	$fieldn=$field;
@@ -1039,28 +1216,33 @@ if(isset($usercedula) and isset($userpass)){
 if($inputform==1){
 $content.=<<<C
 $error
-<table width=30%>
+<table>
   <tr>
-    <td width=50%>
-      Ingrese su cedula:
+    <td>
+      Usuario:
     </td>
     <td><input name="usercedula" value="$usercedula" size=11 maxlength=11></td>
   </tr>
   <tr>
     <td>
-      Ingrese su contraseña:<br/>
+      Contraseña:<br/>
     </td>
     <td><input type="password" name="userpass" value="$userpass" size=20></td>
   </tr>
   <tr>
     <td colspan=2>
-      <i style="color:red;font-size:12px">Para profesores la contraseña es la misma cédula.</i>
+      <i style="color:red;font-size:12px">
+	<a href="?action=recuperausuario">Recuperar usuario</a> | 
+	<a href="?action=recuperapass">Recuperar contraseña</a>
+	<!--Para profesores la contraseña es la misma cédula.-->
+      </i>
     </td>
   </tr>
   <tr>
     <td colspan=2>
-      <input type='submit' name='action' value='Solicitar'>
+      <!--<input type='submit' name='action' value='Solicitar'>-->
       <input type='submit' name='action' value='Consultar'>
+      <!--<input type='submit' name='action' value='Ingresar'>-->
     </td>
   </tr>
 </table>
@@ -1069,11 +1251,69 @@ C;
  }else{
   $permisos=$PERMISOS[$qperm];
   if($qmant){$permisos.=" (Mantenimiento)";}
+
+  if($qinfousuario){
 $content.=<<<C
   <i style=font-size:10px>Esta conectado como <b>$nombre ($usercedula)</b>, Permisos: $permisos</i>
 <hr/>
 C;
+  }
  }
+
+if($qblocksite){
+$content.=$maintainancetxt;
+goto footer;
+}
+
+////////////////////////////////////////////////////////////////////////
+//RECUPERA USUARIO/CONTRASEÑA
+////////////////////////////////////////////////////////////////////////
+if($action=="recuperausuario"){
+  if(isset($operation)){
+$content.=<<<C
+<p>
+  <a href="index.php">Back</a>
+</p>
+C;
+  }else{
+$content.=<<<C
+<form>
+<h2>Recuperación de usuario</h2>
+<p>
+  Ingrese su correo electrónico:
+  <input type="text" name="emailrecupera" value="">
+  <input type='hidden' name='action' value='recuperausuario'>
+  <input type='submit' name='operation' value='Recupera'>
+</p>
+</form>
+C;
+  }
+}
+
+if($action=="recuperapass"){
+  if(isset($operation)){
+$content.=<<<C
+<p>
+  <a href="index.php">Back</a>
+</p>
+C;
+  }else{
+$content.=<<<C
+<form>
+<h2>Recuperación de contraseña</h2>
+  <p>Este formulario le permitirá <b>reiniciar</b> su contraseña en el Sistema de Comisiones.  Después de reiniciar su contraseña (si es exitosa la validación de datos) la contraseña antigua no podrá ser recuperada.  Una nueva contraseña será enviada a su correo registrado en el sistema.</p>
+<p>
+  Ingrese su número de cédula:<br/>
+  <input type="text" name="cedularecupera" value=""><br/>
+  Ingrese su correo electrónico:<br/>
+  <input type="text" name="emailrecupera" value="" size=30><br/>
+  <input type='hidden' name='action' value='recuperapass'>
+  <input type='submit' name='operation' value='Reinicia'>
+</p>
+</form>
+C;
+  }
+}
 
 ////////////////////////////////////////////////////////////////////////
 //SOLICITAR
@@ -1154,7 +1394,7 @@ if($action=="Solicitar"){
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   $result=mysqlCmd("select comisionid from Comisiones where tipocom<>'noremunerada' and cedula='$cedula' and fechafin<now() and qcumplido+0=0;");
   if($result!=0){
-    $foot="<script>alert('Señor(a) Profesor(a), usted tiene Comisiones que ya concluyeron y que están a la espera de cumplido.  Por favor póngase al día con los cumplidos.')</script>";
+    $foot="<script>alert('Señor(a) Profesor(a), usted tiene Comisiones que ya concluyeron y que están a la espera de cumplido.')</script>";
     $faltacumplido="";
     foreach(array_keys($result) as $key){
       if(preg_match("/^\d+$/",$key)){continue;}
@@ -1279,6 +1519,12 @@ $notification
 </tr>
 <!---------------------------------------------------------------------->
 <tr>
+<td colspan=2 style="background:lightgray">
+  Información de Usuario
+</td>
+</tr>
+<!---------------------------------------------------------------------->
+<tr>
 <td>Tipo de Documento:</td>
 <td>$tipoidsel</td>
 </tr>
@@ -1339,18 +1585,22 @@ dedicación exclusiva vigente.
 </tr>
 <!---------------------------------------------------------------------->
 <tr>
-<td>Contraseña usuario:</td>
-<td><input $disp3 type="password" name="pass" value="$pass" size=11>
+<td>Nueva contraseña:</td>
+<td>
+<input $disp3 type="hidden" name="pass" value="$pass">
+<input $disp3 type="password" name="newpass" value="" size=20>
 <input $disp3 type='submit' name='operation' value='Actualizar'>
 </td>
 </tr>
 <tr class=ayuda>
-<td colspan=2>El número solo se asigna una vez se ha aprobado la
-comisión.</td>
+<td colspan=2>Ingrese una nueva contraseña en caso de que desee cambiar.</td>
 </tr>
 <!---------------------------------------------------------------------->
-<td colspan=2>
+<tr>
+<td colspan=2 style="background:lightgray">
+  Información de la Comisión
 </td>
+</tr>
 <!---------------------------------------------------------------------->
 <tr>
 <td>Tipo de comisión:</td>
@@ -2192,6 +2442,7 @@ $content.=<<<C
 Desarrollado por <a href="mailto:jorge.zuluaga@udea.edu.co">Jorge I. Zuluaga</a> (C) 2015.
 </div>
 $foot
+</div>
 </body>
 </html>
 C;
