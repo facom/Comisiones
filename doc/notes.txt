@@ -5,3 +5,20 @@ Notas:
     ALTER TABLE Resoluciones AUTO_INCREMENT=11607
 
   El número debe ser el de la siguiente resolución.
+
+- Como preparar el sitio de prubea:
+
+  * Se restaura la base de datos:	
+  
+       make restore
+
+    Equivalentemente (si se tiene la última version del archivo
+    etc/data/comisiones.sql) se restaura la información manualmente:
+     
+       mysql -u root -p Comisiones < data/comisiones.sql
+
+  * Se modifican las cedulas y correos para adaptarlos a la prueba:
+
+       python test-site.py > etc cedulas-testsite.txt
+
+

@@ -114,6 +114,23 @@ function sendMail($email,$subject,$message,$headers="")
   return $status;
 }
 
+function sendShortMail($email,$subject,$message)
+{
+  $headers="";
+  $headers.="From: noreply@udea.edu.co\r\n";
+  $headers.="Reply-to: noreply@udea.edu.co\r\n";
+  $headers.="MIME-Version: 1.0\r\n";
+  $headers.="MIME-Version: 1.0\r\n";
+  $headers.="Content-type: text/html\r\n";
+$message.=<<<M
+<p>
+<b>Sistema de Solicitud de Comisiones<br/>
+Decanato, FCEN</b>
+</p>
+M;
+  sendMail($email,$subject,$message,$headers);
+}
+
 function getComisionInfo($comisionid)
 {
   global $FIELDS_COMISIONES,$FIELDS_PROFESORES;
