@@ -21,4 +21,7 @@ Notas:
 
        python test-site.py > etc cedulas-testsite.txt
 
+  * Se ajustan los caracteres especiales:
+
+       mysql -u root -p Comisiones < fix-characters.sql
 

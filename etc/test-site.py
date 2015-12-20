@@ -71,12 +71,12 @@ db.execute(sql)
 connection.commit()
 
 # SECRETARIA DECANATO
-sql="update Institutos set cedulajefe='%s',emailinst='%s' where institutoid='fisica'"%(cedulajefe,fixemail2)
+sql="update Institutos set cedulajefe='%s',emailinst='%s' where institutoid='decanatura'"%(ceduladecana,fixemail2)
 db.execute(sql)
 connection.commit()
 
 # SECRETARIA INSTITUTO
-sql="update Institutos set cedulajefe='%s',emailinst='%s' where institutoid='decanatura'"%(ceduladecana,fixemail4)
+sql="update Institutos set cedulajefe='%s',emailinst='%s' where institutoid='fisica'"%(cedulajefe,fixemail4)
 db.execute(sql)
 connection.commit()
 
