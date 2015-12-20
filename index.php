@@ -3,6 +3,7 @@
 //SITE UNDER MAINTAINANCE
 ////////////////////////////////////////////////////////////////////////
 //MAINTAINANCE
+  //phpinfo();
 $QMAINTAINANCE=0;
 
 ////////////////////////////////////////////////////////////////////////
@@ -61,6 +62,56 @@ línea nuevamente a la mayor brevedad posible.
 M;
 
 ////////////////////////////////////////////////////////////////////////
+//BASIC VARIABLES
+////////////////////////////////////////////////////////////////////////
+$qerror=0;
+$inputform=1;
+$qinfousuario=1;
+$qblocksite=0;
+$bodycolor="white";
+$error="";
+$foot="";
+
+//BASIC PERMISSION
+$qperm=0;
+$qmant=0;
+
+//CHECK MAINTAINANCE
+$out=array_search($usercedula,$MAINTAINANCE);
+if(!isBlank($out)){
+  $qmant=1;
+}
+//CHECK DIRECTOR
+$out=array_search($usercedula,$DIRECTORS);
+if(!isBlank($out)){
+  $qperm=1;
+}
+//CHECK SECRETARIA
+$out=array_search($usercedula,$SECRETARIAS);
+if(!isBlank($out)){
+  $qperm=-1;
+  if($usercedula==$SECRETARIAS["decanatura"]){
+    $qperm=-2;
+  }
+}
+//CHECK DEAN
+if($usercedula==$DIRECTORS["decanatura"] or
+   $qmant){
+  $qperm=2;
+  if($qmant){
+    $bodycolor="#ccffcc";
+  }
+}
+if($QMAINTAINANCE and $qperm<2){
+  $qblocksite=1;
+}
+//$qblocksite=1;
+
+if($qperm==1 and $bodycolor=="white"){$bodycolor="#6699CC";}
+if($qperm==2 and $bodycolor=="white"){$bodycolor="#CCFF99";}
+if($qperm==-2 and $bodycolor=="white"){$bodycolor="#ffe6cc";}
+
+////////////////////////////////////////////////////////////////////////
 //HEADER
 ////////////////////////////////////////////////////////////////////////
 //$QTEST=0;
@@ -69,7 +120,7 @@ $bannercolor="green";
 $banner=<<<BANNER
 <div id="diagonal_label">
 <a href="ChangesLog" target="_blank">
-<span><b>&nbsp;</b></span><br /><span>Versión Beta 1.0</span><br id='break' />
+<span><b>&nbsp;</b></span><br /><span>Versión Alpha 2.0<br/><i style='font-size:8px'>Click para últimos cambios</i></span><br id='break' />
 <span></span>
 </a>
 </div>
@@ -146,7 +197,6 @@ $lstyle=<<<STYLE
     }
 STYLE;
 
-
 $content.=<<<C
 <html>
 <head>
@@ -180,7 +230,7 @@ $content.=<<<C
   </style>
 
 </head>
-<body>
+<body style="background:$bodycolor;">
 $banner
 C;
 
@@ -201,48 +251,6 @@ $content.=<<<C
 <hr/>
 <form action="index.php" method="post" enctype="multipart/form-data" accept-charset="utf-8">
 C;
-
-////////////////////////////////////////////////////////////////////////
-//BASIC VARIABLES
-////////////////////////////////////////////////////////////////////////
-$qerror=0;
-$inputform=1;
-$qinfousuario=1;
-$qblocksite=0;
-$error="";
-$foot="";
-
-//BASIC PERMISSION
-$qperm=0;
-$qmant=0;
-
-//CHECK MAINTAINANCE
-$out=array_search($usercedula,$MAINTAINANCE);
-if(!isBlank($out)){
-  $qmant=1;
-}
-//CHECK DIRECTOR
-$out=array_search($usercedula,$DIRECTORS);
-if(!isBlank($out)){
-  $qperm=1;
-}
-//CHECK SECRETARIA
-$out=array_search($usercedula,$SECRETARIAS);
-if(!isBlank($out)){
-  $qperm=-1;
-  if($usercedula==$SECRETARIAS["decanatura"]){
-    $qperm=-2;
-  }
-}
-//CHECK DEAN
-if($usercedula==$DIRECTORS["decanatura"] or
-   $qmant){
-  $qperm=2;
-}
-if($QMAINTAINANCE and $qperm<2){
-  $qblocksite=1;
-}
-//$qblocksite=1;
 
 ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
@@ -326,7 +334,7 @@ echo<<<M
 <head>
   <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
 </head>
-<body>
+  <body>
 <center>
 <div style="font-size:16px;text-align:center;background:lightgray;padding:30px;width:80%">
   Gracias por confirmar la recepción en su
@@ -735,7 +743,10 @@ M;
       if($qnew){
 	$out=mysqlCmd("select cedulajefe,emailinst from Institutos where institutoid='$institutoid'");
 	$cedulajefe=$out[0];
+
+	$copia="Secretaria Instituto";
 	$emailcopia=$emailinst;
+
 	$qcopy=1;
 	
 	$out=mysqlCmd("select email from Profesores where cedula='$cedulajefe'");
@@ -769,9 +780,11 @@ M;
     }else if($estado=="vistobueno"){
       $out=mysqlCmd("select cedulajefe,emailinst from Institutos where institutoid='decanatura'");
       $cedulajefe=$out[0];
-      $emailcopia=$out[1];
-      $qcopy=1;
       
+      $copia="Secretaria Decanato";
+      $emailcopia=$out[1];
+
+      $qcopy=1;
       $out=mysqlCmd("select email from Profesores where cedula='$cedulajefe'");
       $emailjefe=$out[0];
       $destino="Decano";
@@ -798,7 +811,12 @@ M;
 	shell_exec("date > comisiones/$comisionid/.notified");
 
 	$out=mysqlCmd("select email from Profesores where cedula='$cedulajefeinst'");
+
+	$copia="Director Instituto";
 	$emailcopia=$out[0];
+
+	$destino="Solicitante";
+
 	$qcopy=1;
 	$emailjefe=$email;
 
@@ -830,7 +848,10 @@ M;
       }
     }else if($estado=="devuelta"){
       $out=mysqlCmd("select email from Profesores where cedula='$cedulajefeinst'");
+
+      $copia="Director Instituto";
       $emailcopia=$out[0];
+
       $qcopy=1;
       $emailjefe=$email;
       $destino="Solicitante";
@@ -895,18 +916,20 @@ Fecha de actualización: $actualizacion.
 Decanato, FCEN</b>
 M;
 
-      if($HOST!="localhost"){
+      if(!$QTEST or 0){
       	sendMail($emailjefe,$subject,$message,$headers);
 	sendMail($emailuser,$subjectactual,$messageactual);
 	if($qcopy){
 	  sendMail($emailcopia,"[Copia] ".$subject,$message,$headers);
-	  sendMail($emailcco,"[Historico] ".$subject,$message,$headers);
+	  if(!$QTEST){
+	    sendMail($emailcco,"[Historico] ".$subject,$message,$headers);
+	  }
 	}
       }
       else{$simulation="(simulación)";}
       $error.=errorMessage("Notificación enviada a $destino $emailjefe. $simulation");
       if($qcopy){
-	$error.=errorMessage("Una copia ha sido enviada también a $emailcopia. $simulation");
+	$error.=errorMessage("Una copia ha sido enviada también a $copia $emailcopia. $simulation");
       }
     }
   }//End Guardar
@@ -1254,7 +1277,7 @@ C;
 
   if($qinfousuario){
 $content.=<<<C
-  <i style=font-size:10px>Esta conectado como <b>$nombre ($usercedula)</b>, Permisos: $permisos</i>
+  <i style=font-size:10px>Esta conectado como <b>$nombre ($usercedula)</b>, Permisos: <b>$permisos</b></i>
 <hr/>
 C;
   }
@@ -2021,42 +2044,70 @@ if($action=="Consultar"){
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   //VERIFY PERMISSIONS
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  $fields="comisionid,cedula,estado,actualizacion,actualiza,aprobacion,institutoid,tipocom,vistobueno,qcumplido,cumplido1,cumplido2,fechaini,fechafin";
-  $solicitudes=mysqlCmd("select $fields,TIMESTAMP(radicacion) as radicacion from Comisiones $where order by radicacion desc;",$qout=1);
+  $fields="comisionid,cedula,estado,actualizacion,actualiza,aprobacion,institutoid,tipocom,vistobueno,qcumplido,cumplido1,cumplido2,fechaini,fechafin,anexo1,anexo2,anexo3";
+  $order="radicacion desc";
+
+  $solicitudes=mysqlCmd("select $fields,TIMESTAMP(radicacion) as radicacion from Comisiones $where order by $order;",$qout=1);
   if($solicitudes==0){$nsolicitudes=0;}
   else{$nsolicitudes=count($solicitudes);}
   
 $table=<<<T
-<table width=80% border=1px>
+<table width=100% border=0px style='font-size:14px'>
 <tr>
-  <td width=10%>Comisión</td>
-  <td width=10%>Radicación</td>
-  <td width=10%>Actualización</td>
-  <td>Tipo</td>
-  <td>Estado</td>
-  <td>Instituto</td>
-  <td width=40%>Solicitante</td>
-  <td width=40%>Inicio y Fin</td>
-  <td>Acciones</td>
-  <td>Descargas</td>
-  <td>Otras</td>
+  <td width=5% style=background:lightgray>
+    <a href="JavaScript:void(null)">Comisión</a>
+    
+  <td width=5% style=background:lightgray>
+    <a href="JavaScript:void(null)">Radicación</a>
+    
+  <td width=5% style=background:lightgray>
+    <a href="JavaScript:void(null)">Actualización</a>
+    
+  <td width=5% style=background:lightgray>
+    <a href="JavaScript:void(null)">Fechas</a>
+    
+  <td width=10% style=background:lightgray>
+    <a href="JavaScript:void(null)">Tipo</a>
+    
+  <td width=10% style=background:lightgray>
+    <a href="JavaScript:void(null)">Estado</a>
+    
+  <td width=10% style=background:lightgray>
+    <a href="JavaScript:void(null)">Instituto</a>
+    
+  <td width=20% style=background:lightgray>
+    <a href="JavaScript:void(null)">Solicitante</a>
+    
+  <td width=15% style=background:lightgray>
+    <a href="JavaScript:void(null)">Descargas</a>
+    
+  <td width=20% style=background:lightgray>
+    <a href="JavaScript:void(null)">Acciones</a>
+    
 </tr>
 T;
   
   for($i=0;$i<$nsolicitudes;$i++){
+
     $comision=$solicitudes[$i];
     $tcomisionid=$comision['comisionid'];
     $tcedula=$comision['cedula'];
     $tqcumplido=$comision['qcumplido'];
     $tcumplido1=$comision['cumplido1'];
     $tcumplido2=$comision['cumplido2'];
+
+    $tanexo1=$comision['anexo1'];
+    $tanexo2=$comision['anexo2'];
+    $tanexo3=$comision['anexo3'];
+
     $testadox=$comision['estado'];
-    $testado=$ESTADOS[$testadox];
+    $testado=$ESTADOS["$testadox"];
     $ttipocomx=$comision['tipocom'];
     $ttipocom=$TIPOSCOM[$ttipocomx];
     $tfechaini=$comision['fechaini'];
     $tfechafin=$comision['fechafin'];
     
+    //CALCULA EL TIEMPO DESPUES DE FINALIZADA DE LA COMISION
     $tafter=mysqlCmd("select UNIX_TIMESTAMP(now())-UNIX_TIMESTAMP(fechafin) from Comisiones where comisionid='$tcomisionid'")[0];
     
     $estadocolor=$COLORS[$testadox];
@@ -2081,59 +2132,99 @@ T;
     $generar="";
     $reslink="";
     $extrares="";
+    
     if(abs($qperm)==2 and $taprobacion=="Si" and $ttipocomx!="noremunerada"){
       $generar="<!-- -------------------------------------------------- -->
     <a href=?$USERSTRING&comisionid=$tcomisionid&operation=Resolucion&action=Consultar>
-      Generar</a>";
+      Generar</a><br/>";
     }
     if(file_exists("comisiones/$tcomisionid/resolucion-$tcomisionid.html") and
        !file_exists("comisiones/$tcomisionid/.nogen")){
       $reslink="<!-- -------------------------------------------------- -->
     <a href=comisiones/$tcomisionid/resolucion-$tcomisionid.html target='_blank'>
       Resolucion</a>
-  (<a href=comisiones/$tcomisionid/resolucion-$tcomisionid.pdf target='_blank'>pdf</a>)
+  (<a href=comisiones/$tcomisionid/resolucion-$tcomisionid.pdf target='_blank'>pdf</a>)<br/>
 ";
       $extrares="";
       if(abs($qperm)==2){
 	$extrares="<!-- -------------------------------------------------- -->
     <a href=comisiones/$tcomisionid/resolucion-blank-$tcomisionid.html target='_blank'>
-      Resolución imprimible</a>
-  (<a href=comisiones/$tcomisionid/resolucion-blank-$tcomisionid.pdf target='_blank'>pdf imprimible</a>)
+      Imprimible</a>
+  (<a href=comisiones/$tcomisionid/resolucion-blank-$tcomisionid.pdf target='_blank'>pdf</a>)<br/>
 ";
       }
       
     }else{
-      $reslink="<i>No disponible</i>";
+      $reslink="<i>No disponible</i><br/>";
+    }
+    
+    //ARCHIVOS
+    $tarchivos="";
+    if(!isBlank($tanexo1)){
+      $tarchivos.="<a href='comisiones/$tcomisionid/$tanexo1' target='_blank'>Anexo 1</a><br/>";
+    }
+    if(!isBlank($tanexo2)){
+      $tarchivos.="<a href='comisiones/$tcomisionid/$tanexo2' target='_blank'>Anexo 2</a><br/>";
+    }
+    if(!isBlank($tanexo3)){
+      $tarchivos.="<a href='comisiones/$tcomisionid/$tanexo3' target='_blank'>Anexo 3</a><br/>";
+    }
+
+    $tarchivoscump="";
+    if(!isBlank($tcumplido1) and $tcumplido1!='None'){
+      $tarchivoscump.="<a href='comisiones/$tcomisionid/Cumplido1_${tcedula}_${tcomisionid}_$tcumplido1' target='_blank'>Cumplido 1</a><br/>";
+    }
+    if(!isBlank($tcumplido2) and $tcumplido2!='None'){
+      $tarchivoscump.="<a href='comisiones/$tcomisionid/Cumplido2_${tcedula}_${tcomisionid}_$tcumplido2' target='_blank'>Cumplido 2</a><br/>";
+    }
+    if(!isBlank($tcumplido3) and $tcumplido3!='None'){
+      $tarchivoscump.="<a href='comisiones/$tcomisionid/Cumplido3_${tcedula}_${tcomisionid}_$tcumplido3' target='_blank'>Cumplido 3</a><br/>";
     }
 
     //GENERANDO ACCIONES
     $borrar="";
     $cumplido="";
+
+    //CUMPLIDO STATUS
     if($ttipocomx!="noremunerada"){
 
+      //APROBADA + NO CUMPLIDA + TIEMPO PASADO
       if($taprobacion=="Si" and 
-	 $tqcumplido==0 and
-	 $tafter>0){
+	 $tqcumplido==0){
+	if($tafter>0){
 	$cumplido="<!-- -------------------------------------------------- -->
   <a href=?$USERSTRING&comisionid=$tcomisionid&action=Cumplido>
-  Subir Cumplido</a>";
+  Subir Cumplido</a><br/>";
+	}else{
+	  $cumplido="Cumplido futuro<br/>";
+	}
       }
 
+      //CUMPLIDA + DECANA
       if($tqcumplido>0 and
 	 $qperm){
 	$cumplido="<!-- -------------------------------------------------- -->
-<a href=?$USERSTRING&comisionid=$tcomisionid&action=Cumplido>Modificar Cumplido</a>";
+<a href=?$USERSTRING&comisionid=$tcomisionid&action=Cumplido>Modificar Cumplido</a><br/>";
       }
-      else if($qperm==0){
+
+      //CUMPLIDA + PROFESOR
+      if($tqcumplido>0 and
+	 $qperm==0){
 	$cumplido="<!-- -------------------------------------------------- -->
-<a href=?$USERSTRING&comisionid=$tcomisionid&action=Cumplido>Actualizar Cumplido</a>";
+<a href=?$USERSTRING&comisionid=$tcomisionid&action=Cumplido>Actualizar Cumplido</a><br/>";
       }
-      if($taprobacion!="Si" and $tvistobueno!="Si"){
-	$cumplido="";
+
+      //APENAS SOLICITADA
+      if($taprobacion!="Si" or 
+	 $tvistobueno!="Si"){
+	$cumplido="Pendiente<br/>";
       }
+
     }
 
-    if($taprobacion!="Si" and $tvistobueno!="Si"){
+    //BORRA SOLO SI NO HA SIDO SOLICITADA
+    if($taprobacion!="Si" and 
+       $tvistobueno!="Si"){
       $borrar="<!-- -------------------------------------------------- -->
   <a href=?$USERSTRING&comisionid=$tcomisionid&operation=Borrar&action=Consultar>
   Borrar</a>";
@@ -2148,20 +2239,20 @@ $table.=<<<T
     </a>
   </td>
   <td>$tradicacion</td>
-  <td>$tactualizacion<br/>Usuario:$tactualiza</td>
+  <td>$tactualizacion<br/>$tactualiza</td>
+  <td>$tfechaini<br/>$tfechafin</td>
   <td>$ttipocom</td>
   <td>$testado</td>
   <td>$tinstituto</td>
   <td>$tcedula, $tnombre</td>
-  <td>$tfechaini<br/>$tfechafin</td>
-  <td>
-    $generar
-  </td>
   <td>
   $reslink
   $extrares
+  $tarchivos
+  $tarchivoscump
   </td>
   <td>
+$generar
 $cumplido
 $borrar
   </td>
