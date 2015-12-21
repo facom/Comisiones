@@ -3,7 +3,7 @@
 //SITE UNDER MAINTAINANCE
 ////////////////////////////////////////////////////////////////////////
 //MAINTAINANCE
-  //phpinfo();
+//phpinfo();
 $QMAINTAINANCE=0;
 
 ////////////////////////////////////////////////////////////////////////
@@ -22,7 +22,7 @@ setlocale(LC_TIME,"es_ES.UTF-8");
 //CHECK IF THIS IS THE MAIN SITE OR THE TEST SITE
 $QTEST=0;
 if($HOST=="localhost"){$QTEST=1;}
-$QTEST=0;
+//$QTEST=0;
 
 ////////////////////////////////////////////////////////////////////////
 //HEADER
@@ -111,6 +111,13 @@ if($QMAINTAINANCE and $qperm<2){
 if($qperm==1 and $bodycolor=="white"){$bodycolor="#6699CC";}
 if($qperm==2 and $bodycolor=="white"){$bodycolor="#CCFF99";}
 if($qperm==-2 and $bodycolor=="white"){$bodycolor="#ffe6cc";}
+
+////////////////////////////////////////////////////////////////////////
+//BROWSING LINKS
+////////////////////////////////////////////////////////////////////////
+$browsing_help=<<<H
+<a href="?$USERSTRING&action=ayuda">Ayuda</a>
+H;
 
 ////////////////////////////////////////////////////////////////////////
 //HEADER
@@ -1232,6 +1239,11 @@ if(isset($action)){
     $qinfousuario=0;
     $qerror=1;
   }
+  if(preg_match("/ayuda/",$action)){
+    $inputform=0;
+    $qinfousuario=0;
+    $qerror=1;
+  }
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -1286,7 +1298,7 @@ $error
   </tr>
   <tr>
     <td colspan=2>
-      <i style="color:red;font-size:12px">
+      <i style="color:black;font-size:12px">
 	<a href="?action=recuperausuario">Recuperar usuario</a> | 
 	<a href="?action=recuperapass">Recuperar contraseña</a>
 	<!--Para profesores la contraseña es la misma cédula.-->
@@ -1368,6 +1380,25 @@ $content.=<<<C
 </form>
 C;
   }
+}
+
+////////////////////////////////////////////////////////////////////////
+//AYUDA
+////////////////////////////////////////////////////////////////////////
+if($action=="ayuda"){
+$referer=$_SERVER["HTTP_REFERER"];
+$content.=<<<C
+<a href="$referer">Back</a>
+<h2>Ayuda</h2>
+<p>
+A continuación se enumeran algunos videotutoriales relacionados con el sistema de comisiones.
+</p>
+<ul>
+<li>Videotutorial completo sobre el uso y administración del sistema:<br/>
+  <iframe height="200" src="https://www.youtube.com/embed/oJiSfoGtT6A" frameborder="0" allowfullscreen></iframe>
+</li>
+</ul>
+C;
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -1554,10 +1585,13 @@ R;
   $fecharango_menu=fechaRango("fecharango",$fechaini,$fechafin);
 
 $content.=<<<C
-  <a href="?$USERSTRING&action=Consultar">Lista de Solicitudes</a> | <a href="?$USERSTRING">Salir</a>
+  <a href="?usercedula=$usercedula&userpass=$userpass&action=Solicitar">Nueva Solicitud</a> |
+  <a href="?$USERSTRING&action=Consultar">Lista de Solicitudes</a> | 
+  $browsing_help |   
+  <a href="?$USERSTRING">Salir</a>
 <p/>
 $error
-<a href="?usercedula=$usercedula&userpass=$userpass&action=Solicitar">Nueva Solicitud</a>
+
 <h2>Solicitud de Comisión</h2>
 <a href="JavaScript:void(null)" onclick="$('.ayuda').toggle('fast',null);" style="font-size:12px">Mostrar/Ocultar ayuda</a>
 <p></p>
@@ -1981,7 +2015,9 @@ D;
   }
 
 $content.=<<<C
-<a href="?$USERSTRING&action=Consultar">Lista de Solicitudes</a> | <a href="?$USERSTRING">Salir</a>
+<a href="?$USERSTRING&action=Consultar">Lista de Solicitudes</a> | 
+$browsing_help | 
+<a href="?$USERSTRING">Salir</a>
 <p/>
 $error
 <form method="GET" action="index.php">
@@ -2318,10 +2354,15 @@ T;
    $informes="<a href='?usercedula=$cedula&userpass=$userpass&action=Informes'>Informes</a> | <a href='?usercedula=$cedula&userpass=$userpass&operation=Backup&action=Consultar'>Hacer respaldo</a>";
  }
 
+ //OTROS ORDENAMIENTOS
+ $order_recientes=urlencode("abs(fechafin-DATE(now()))");
+
 $content.=<<<C
 $error
 <a href="?usercedula=$usercedula&userpass=$userpass&action=Solicitar">Nueva Solicitud</a> | 
-<a href="?$USERSTRING&action=Consultar">Lista de Solicitudes</a> | <a href="?$USERSTRING">Salir</a>
+<a href="?$USERSTRING&action=Consultar">Lista de Solicitudes</a> | 
+$browsing_help | 
+<a href="?$USERSTRING">Salir</a>
 <h2>Lista de solicitudes.</h2>
   Número de solicitudes: $nsolicitudes
 <p></p>
@@ -2338,6 +2379,10 @@ $error
   <td style=background:pink>Falta Cumplido</td>
   </tr></table>
 <p></p>
+<p style="font-size:12">
+  Otros criterios de ordenación:
+  <a href="?$USERSTRING&action=Consultar&orderby=$order_recientes&direction=$direction">Finalizan recientemente</a>
+</p>
 $table
 <p></p>
 $informes
