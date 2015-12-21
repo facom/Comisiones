@@ -22,6 +22,7 @@ setlocale(LC_TIME,"es_ES.UTF-8");
 //CHECK IF THIS IS THE MAIN SITE OR THE TEST SITE
 $QTEST=0;
 if($HOST=="localhost"){$QTEST=1;}
+$QTEST=0;
 
 ////////////////////////////////////////////////////////////////////////
 //HEADER
@@ -119,7 +120,7 @@ if(!$QTEST){
 $bannercolor="green";
 $banner=<<<BANNER
 <div id="diagonal_label">
-<a href="ChangesLog" target="_blank">
+<a href="ChangesLog.html" target="_blank">
 <span><b>&nbsp;</b></span><br /><span>Versión Alpha 2.0<br/><i style='font-size:8px'>Click para últimos cambios</i></span><br id='break' />
 <span></span>
 </a>
@@ -385,14 +386,34 @@ M;
 
     //UPDATE DATABASE
     $qemail=1;
+    $estado="";
+    $qcumplido=0;
+
     if($update!="set "){
-      $update.="qcumplido='1',infocumplido='$infocumplido',estado='cumplida'";
+      if(isset($envia)){
+	$qcumplido=1;
+	$estado="estado='cumplida'";
+	$error.=errorMessage("<b>Felicitaciones. Su comisión se ha cumplido con exito.</b>");
+      }else{
+	$error.=errorMessage("Recuerde que su solicitud no se actualizará al estado de cumplida hasta que no autorice el envio del correo de notificación");
+      }
+      $update.="qcumplido='$qcumplido',infocumplido='$infocumplido',$estado";
       $sql="update Comisiones $update where comisionid='$comisionid';";
-      echo "<pre>$sql</pre>";
       mysqlCmd($sql);
       $comision["qcumplido"]=1;
       $comision["destinoscumplido"]=$DESTINATARIOS_CUMPLIDOS[0][2].";";
       $comision["infocumplido"]=$infocumplido;
+    }else{
+      if(isset($envia)){
+	$qcumplido=1;
+	$estado="estado='cumplida'";
+	$sql="update Comisiones set qcumplido='$qcumplido',$estado where comisionid='$comisionid';";
+	mysqlCmd($sql);
+	$comision["qcumplido"]=1;
+	$error.=errorMessage("<b>Felicitaciones. Su comisión se ha cumplido con exito.</b>");
+      }else{
+	$error.=errorMessage("Recuerde que su solicitud no se actualizará al estado de cumplida hasta que no autorice el envio del correo de notificación");
+      }      
     }
 
     //NOTHING HAS BEEN ADDED
@@ -426,6 +447,7 @@ M;
 	$i++;
 	$index=array_search($i,$destinatarios);
 	if(isBlank($index)){continue;}
+	
 
 	$dependencia=$destino[0];
 	$persona=$destino[1];
@@ -471,6 +493,7 @@ M;
 
       $i=-1;
       $destintxt="destinoscumplido='$destinoscumplido";
+
       foreach($DESTINATARIOS_CUMPLIDOS as $destino){
 	$i++;
 	$index=array_search($i,$destinatarios);
@@ -479,6 +502,11 @@ M;
 	$dependencia=$destino[0];
 	$persona=$destino[1];
 	$emailpersona=$destino[2];
+
+	if(preg_match("/$emailpersona::/",$confirmacumplido)){
+	  $error.=errorMessage("$emailpersona ya confirmo.");
+	  continue;
+	}
 
 	$url="$URL/?operation=confirmacumplido&comisionid=$comisionid&emailconfirma=$emailpersona";
 	$linkconfirmacion="<a href=$url>$url</a>";
@@ -525,9 +553,10 @@ documentación haciendo click en este enlace: $linkconfirmacion.
 Decanato, FCEN</b>
 </p>
 M;
-        //echo "$message<br/>";
-        sendMail($emailpersona,$subject,$message,$headers);
-	$error.=errorMessage("Mensaje enviado a $emailpersona");
+        $simulacion="";
+        if(!$QTEST){sendMail($emailpersona,$subject,$message,$headers);}
+	else{$simulacion=" (Simulación)";}
+	$error.=errorMessage("Mensaje enviado a $emailpersona $simulacion");
       }
     }
   }
@@ -619,6 +648,10 @@ M;
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     //CHECK STATUS
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    if($estado=="devuelta"){
+      $vistobueno="No";
+      $aprobacion="No";
+    }
     if($vistobueno=="Si"){
       $estado="vistobueno";
     }else if($estado!="devuelta"){
@@ -628,7 +661,6 @@ M;
     if($aprobacion=="Si"){
       $estado="aprobada";
       if($tipocom!="noremunerada"){
-	//shell_exec("echo $resolucion >> etc/resoluciones.txt");
 	$result=mysqlCmd("show table status where Name='Resoluciones';",$qout=0,$qlog=0);
 	$resolucion=$result["Auto_increment"];
 	$sql="insert into Resoluciones (comisionid) values ('$comisionid');";
@@ -821,7 +853,7 @@ M;
 	$emailjefe=$email;
 
 $restxt=<<<R
-El número de resolución de decanatura es el $resolucion de $fecharesolucion.
+El número de resolución de decanato es el <b>$resolucion de $fecharesolucion</b>.
 </p>
 <p>
 Para obtener una copia de la resolución de click en <a href="$URL/comisiones/$comisionid/resolucion-$comisionid.pdf">este enlace</a>.
@@ -858,7 +890,7 @@ M;
       
       $subject="[Comisiones] Su solicitud de comisión/permiso ha sido devuelta.";
 $message=<<<M
-  Se&ntilde;or(a) Decano(a),
+  Se&ntilde;or(a) Profesor(a),
 <p>
 La solicitud radicada en el <a href='bit.ly/fcen-comisiones'>Sistema
 de Solicitudes</a> identificada con número '$comisionid' ha sido
@@ -1803,7 +1835,13 @@ razón), Visto Bueno Director (la solicitud ha recibido el visto bueno
 del director pero espera aprobación de Decano), Aprobada por Decano
 (solicitud aprobada).</td>
 </tr>
-
+<!---------------------------------------------------------------------->
+<tr>
+<td>Respuesta:</td>
+<td>
+$respuesta
+</td>
+</tr>
 <!---------------------------------------------------------------------->
 <tr $disp1>
 <td colspan=2>
@@ -1841,16 +1879,16 @@ comisión.</td>
 <td>$aprosel</td>
 </tr>
 <!---------------------------------------------------------------------->
+<tr $disp2 class="discorta" $discortastyle>
+<td>Resolución:</td>
+<td>$generar</td>
+</tr>
+<!---------------------------------------------------------------------->
 <tr>
 <td>Respuesta:</td>
 <td>
 <textarea name="respuesta" cols=30 rows=10>$respuesta</textarea>
 </td>
-</tr>
-<!---------------------------------------------------------------------->
-<tr $disp2 class="discorta" $discortastyle>
-<td>Resolución:</td>
-<td>$generar</td>
 </tr>
 </table>
 <!---------------------------------------------------------------------->
@@ -1937,7 +1975,7 @@ if($action=="Cumplido"){
     }
 
 $destinatarios.=<<<D
-<input type="checkbox" name="destinatarios[]" value="$i" $status><a href="mailto:$persona <$emailpersona">$dependencia</a> $confirm<br/>
+<input type="checkbox" name="destinatarios[]" value="$i" $status><a href="mailto:$persona <$emailpersona>">$dependencia</a> $confirm<br/>
 D;
     $i++;
   }
@@ -2045,7 +2083,14 @@ if($action=="Consultar"){
   //VERIFY PERMISSIONS
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   $fields="comisionid,cedula,estado,actualizacion,actualiza,aprobacion,institutoid,tipocom,vistobueno,qcumplido,cumplido1,cumplido2,fechaini,fechafin,anexo1,anexo2,anexo3";
-  $order="radicacion desc";
+  if(!isset($orderby)){
+    $direction="asc";
+    $order="radicacion desc";
+  }else{
+    if($direction=="asc"){$direction="desc";}
+    else{$direction="asc";}
+    $order="$orderby $direction";
+  }
 
   $solicitudes=mysqlCmd("select $fields,TIMESTAMP(radicacion) as radicacion from Comisiones $where order by $order;",$qout=1);
   if($solicitudes==0){$nsolicitudes=0;}
@@ -2055,34 +2100,34 @@ $table=<<<T
 <table width=100% border=0px style='font-size:14px'>
 <tr>
   <td width=5% style=background:lightgray>
-    <a href="JavaScript:void(null)">Comisión</a>
+    <a href="?$USERSTRING&action=Consultar&orderby=comisionid&direction=$direction">Comisión</a>
     
   <td width=5% style=background:lightgray>
-    <a href="JavaScript:void(null)">Radicación</a>
+    <a href="?$USERSTRING&action=Consultar&orderby=radicacion&direction=$direction">Radicación</a>
     
   <td width=5% style=background:lightgray>
-    <a href="JavaScript:void(null)">Actualización</a>
+    <a href="?$USERSTRING&action=Consultar&orderby=actualizacion&direction=$direction">Actualización</a>
     
   <td width=5% style=background:lightgray>
-    <a href="JavaScript:void(null)">Fechas</a>
+    <a href="?$USERSTRING&action=Consultar&orderby=fechafin&direction=$direction">Fechas</a>
     
   <td width=10% style=background:lightgray>
-    <a href="JavaScript:void(null)">Tipo</a>
+    <a href="?$USERSTRING&action=Consultar&orderby=tipocom&direction=$direction">Tipo</a>
     
   <td width=10% style=background:lightgray>
-    <a href="JavaScript:void(null)">Estado</a>
+    <a href="?$USERSTRING&action=Consultar&orderby=estado&direction=$direction">Estado</a>
     
   <td width=10% style=background:lightgray>
-    <a href="JavaScript:void(null)">Instituto</a>
+    <a href="?$USERSTRING&action=Consultar&orderby=institutoid&direction=$direction">Instituto</a>
     
   <td width=20% style=background:lightgray>
-    <a href="JavaScript:void(null)">Solicitante</a>
+    <a href="?$USERSTRING&action=Consultar&orderby=cedula&direction=$direction">Solicitante</a>
     
   <td width=15% style=background:lightgray>
-    <a href="JavaScript:void(null)">Descargas</a>
+    Descargas
     
   <td width=20% style=background:lightgray>
-    <a href="JavaScript:void(null)">Acciones</a>
+    Acciones
     
 </tr>
 T;
@@ -2114,6 +2159,7 @@ T;
     if($ttipocomx=="noremunerada"){
       $estadocolor=$COLORS[$testadox."_noremunerada"];
     }
+
     if($tafter>0 and 
        $testadox=="aprobada" and
        $ttipocomx!="noremunerada"){
