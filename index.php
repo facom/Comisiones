@@ -23,6 +23,7 @@ setlocale(LC_TIME,"es_ES.UTF-8");
 $QTEST=0;
 if($HOST=="localhost"){$QTEST=1;}
 //$QTEST=0;
+$QOVER=1;
 
 ////////////////////////////////////////////////////////////////////////
 //HEADER
@@ -248,11 +249,11 @@ C;
 $content.=<<<C
 <table width=100% border=0>
 <tr>
-<td width=10%><image src="$LOGOUDEA/udea_fcen.jpg"/ height=120px></td>
+<td width=10%><image src="images/udea.jpg"/ height=120px></td>
 <td valign=bottom>
   <b style='font-size:32'><a href=index.php>Solicitud de Comisiones</a></b><br/>
-  <b style='font-size:24'>Decanato</b><br/>
-  <b style='font-size:24'>Facultad de Ciencias Exactas y Naturales</b><br/>
+  <!--<b style='font-size:24'>Decanato</b><br/>-->
+  <!--<b style='font-size:24'>Facultad de Ciencias Exactas y Naturales</b><br/>-->
   <b style='font-size:24'>Universidad de Antioquia</b><br/>
 </td>
 </table>
@@ -561,7 +562,9 @@ Decanato, FCEN</b>
 </p>
 M;
         $simulacion="";
-        if(!$QTEST){sendMail($emailpersona,$subject,$message,$headers);}
+        if(!$QTEST or $QOVER){
+	  sendMail($emailpersona,$subject,$message,$headers);
+	}
 	else{$simulacion=" (Simulación)";}
 	$error.=errorMessage("Mensaje enviado a $emailpersona $simulacion");
       }
@@ -955,12 +958,12 @@ Fecha de actualización: $actualizacion.
 Decanato, FCEN</b>
 M;
 
-      if(!$QTEST or 0){
+      if(!$QTEST or $QOVER){
       	sendMail($emailjefe,$subject,$message,$headers);
 	sendMail($emailuser,$subjectactual,$messageactual);
 	if($qcopy){
 	  sendMail($emailcopia,"[Copia] ".$subject,$message,$headers);
-	  if(!$QTEST){
+	  if(!$QTEST or $QOVER){
 	    sendMail($emailcco,"[Historico] ".$subject,$message,$headers);
 	  }
 	}
@@ -1524,10 +1527,12 @@ R;
   $disp2="";
   $disp3="";
   $disp4="";
+  $disp5="";//READONLY FOR PROFESOR
   $tabcolor="white";
   if(abs($qperm)==0){
     $disp1="style='display:none'";
     $disp4="style='display:none'";
+    $disp5="readonly";
   }
   if(abs($qperm)==1){
     $disp2="style='display:none'";
@@ -1562,7 +1567,7 @@ R;
   //echo "TIPO:$tipo<br/>";
   $tiposel=generateSelection($TIPOS,"tipo",$tipo,$disabled="$disp3",$readonly=1);
   $tipoidsel=generateSelection($TIPOSID,"tipoid",$tipoid,$disabled="$disp3");
-  $instsel=generateSelection($INSTITUTOS,"institutoid",$institutoid,$disabled="$disp3");
+  $instsel=generateSelection($INSTITUTOS,"institutoid",$institutoid,$disabled="$disp3 $disp5");
   $dedsel=generateSelection($SINO,"dedicacion",$dedicacion,$disabled="$disp3");
   $vobosel=generateSelection($SINO,"vistobueno",$vistobueno,$disabled="$disp3");
   $aprosel=generateSelection($SINO,"aprobacion",$aprobacion,$disabled="$disp3");
@@ -1624,7 +1629,7 @@ $notification
 <!---------------------------------------------------------------------->
 <tr>
 <td>Documento:</td>
-<td><input $disp3 type="text" name="cedula" value="$cedula" size=11></td>
+<td><input $disp3 $disp5 type="text" name="cedula" value="$cedula" size=11></td>
 </tr>
 </tr>
 <tr class=ayuda>
