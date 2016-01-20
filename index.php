@@ -23,6 +23,8 @@ setlocale(LC_TIME,"es_ES.UTF-8");
 $QTEST=0;
 if($HOST=="localhost"){$QTEST=1;}
 //$QTEST=0; //Decomente para obligar que sea servidor
+
+//MAIL MODE
 $QOVER=0; //1 para obligar a enviar correo cuando esta en test
 
 ////////////////////////////////////////////////////////////////////////
@@ -107,13 +109,15 @@ if($usercedula==$DIRECTORS["decanatura"] or
 if($QMAINTAINANCE and $qperm<2){
   $qblocksite=1;
 }
-//$qblocksite=1;
+//$qblocksite=1;//Uncomment to force maintainance mode
 
 if($qperm==1 and $bodycolor=="white"){$bodycolor="#6699CC";}
 if($qperm==2 and $bodycolor=="white"){$bodycolor="#CCFF99";}
 if($qperm==-2 and $bodycolor=="white"){$bodycolor="#ffe6cc";}
 
-$bodycolor="white"; //Decomente para codificar con color
+if(!$QTEST){
+  $bodycolor="white"; //Decomente para codificar con color
+}
 
 ////////////////////////////////////////////////////////////////////////
 //BROWSING LINKS
