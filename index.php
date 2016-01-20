@@ -22,8 +22,8 @@ setlocale(LC_TIME,"es_ES.UTF-8");
 //CHECK IF THIS IS THE MAIN SITE OR THE TEST SITE
 $QTEST=0;
 if($HOST=="localhost"){$QTEST=1;}
-//$QTEST=0;
-$QOVER=1;
+//$QTEST=0; //Decomente para obligar que sea servidor
+$QOVER=0; //1 para obligar a enviar correo cuando esta en test
 
 ////////////////////////////////////////////////////////////////////////
 //HEADER
@@ -113,6 +113,8 @@ if($qperm==1 and $bodycolor=="white"){$bodycolor="#6699CC";}
 if($qperm==2 and $bodycolor=="white"){$bodycolor="#CCFF99";}
 if($qperm==-2 and $bodycolor=="white"){$bodycolor="#ffe6cc";}
 
+$bodycolor="white"; //Decomente para codificar con color
+
 ////////////////////////////////////////////////////////////////////////
 //BROWSING LINKS
 ////////////////////////////////////////////////////////////////////////
@@ -129,7 +131,7 @@ $bannercolor="green";
 $banner=<<<BANNER
 <div id="diagonal_label">
 <a href="ChangesLog.html" target="_blank">
-<span><b>&nbsp;</b></span><br /><span>Versión Alpha 2.0<br/><i style='font-size:8px'>Click para últimos cambios</i></span><br id='break' />
+<span><b>&nbsp;</b></span><br /><span>Versión Alpha 2.0<br/><i style='font-size:8px'>Click para ver los últimos cambios</i></span><br id='break' />
 <span></span>
 </a>
 </div>
@@ -1390,6 +1392,8 @@ C;
 ////////////////////////////////////////////////////////////////////////
 if($action=="ayuda"){
 $referer=$_SERVER["HTTP_REFERER"];
+$widthvid=400;
+$heightvid=$widthvid/1.4;
 $content.=<<<C
 <a href="$referer">Back</a>
 <h2>Ayuda</h2>
@@ -1397,8 +1401,45 @@ $content.=<<<C
 A continuación se enumeran algunos videotutoriales relacionados con el sistema de comisiones.
 </p>
 <ul>
-<li>Videotutorial completo sobre el uso y administración del sistema:<br/>
-  <iframe height="200" src="https://www.youtube.com/embed/oJiSfoGtT6A" frameborder="0" allowfullscreen></iframe>
+<li>Lista de reproducción con todos los videos de ayuda:<br/><center>
+  <iframe width="$widthvid" height="$heightvid" src="https://www.youtube.com/embed/-q2KMFeB83M?list=PLPdkBLbDPtqr8Jci4GgeGlmGA0Kcj6DbT" 
+	  frameborder="0" allowfullscreen></iframe></center><br/>
+</li>
+<li>Estructura básica del sistema:<br/><center>
+  <iframe width="$widthvid" height="$heightvid" src="https://www.youtube.com/embed/-q2KMFeB83M" 
+	  frameborder="0" allowfullscreen></iframe></center><br/>
+</li>
+<li>Recuperación de usuario y contraseña:<br/><center>
+  <iframe width="$widthvid" height="$heightvid" src="https://www.youtube.com/embed/131q52pq7GI" 
+	  frameborder="0" allowfullscreen></iframe></center><br/>
+</li>
+<li>Cambiar contraseña:<br/><center>
+  <iframe width="$widthvid" height="$heightvid" src="https://www.youtube.com/embed/-4KNMT6Ru68" 
+	  frameborder="0" allowfullscreen></iframe></center><br/>
+</li>
+<li>Solicitar comisión:<br/><center>
+  <iframe width="$widthvid" height="$heightvid" src="https://www.youtube.com/embed/7s3qIhszdDc" 
+	  frameborder="0" allowfullscreen></iframe></center><br/>
+</li>
+<li>Visto bueno del Director:<br/><center>
+  <iframe width="$widthvid" height="$heightvid" src="https://www.youtube.com/embed/I5r3-t-4k88" 
+	  frameborder="0" allowfullscreen></iframe></center><br/>
+</li>
+<li>Aprobación de Solicitudes:<br/><center>
+  <iframe width="$widthvid" height="$heightvid" src="https://www.youtube.com/embed/POZIwuUOqv0" 
+	  frameborder="0" allowfullscreen></iframe></center><br/>
+</li>
+<li>Subir cumplido:<br/><center>
+  <iframe width="$widthvid" height="$heightvid" src="https://www.youtube.com/embed/WOiGAlEA0Kk" 
+	  frameborder="0" allowfullscreen></iframe></center><br/>
+</li>
+<li>Devolución de solicitudes:<br/><center>
+  <iframe width="$widthvid" height="$heightvid" src="https://www.youtube.com/embed/CY8c21N23Rg" 
+	  frameborder="0" allowfullscreen></iframe></center><br/>
+</li>
+<li>Generar informes y hacer respaldo:<br/><center>
+  <iframe width="$widthvid" height="$heightvid" src="https://www.youtube.com/embed/yP1lfx0bwRk" 
+	  frameborder="0" allowfullscreen></iframe></center><br/>
 </li>
 </ul>
 C;
@@ -1740,7 +1781,7 @@ $diasdisponible $comment
 $fecharango_menu
 </td>
 </tr>
-<!--<tr $disp1>
+<tr $disp1>
 <td>Fechas en texto:</td>
 <td>
 <input $disp3 type="text" name="fecha" value="$fecha" size=30>
@@ -1752,7 +1793,7 @@ final) incluyendo las fechas de viaje. El decano solo puede conceder
 hasta 30 días calendario, si fuese mayor duración la solicitud debe ir
 a un acta de consejo de facultad para que sea recomendada a
 vicerrectoría de docencia.</td>
-</tr>-->
+</tr>
 <!---------------------------------------------------------------------->
 <tr class="discorta" $discortastyle>
 <td>Motivo de la comisión:</td>
@@ -2143,13 +2184,13 @@ $table=<<<T
   <td width=5% style=background:lightgray>
     <a href="?$USERSTRING&action=Consultar&orderby=comisionid&direction=$direction">Comisión</a>
     
-  <td width=5% style=background:lightgray>
+  <td width=7% style=background:lightgray>
     <a href="?$USERSTRING&action=Consultar&orderby=radicacion&direction=$direction">Radicación</a>
     
-  <td width=5% style=background:lightgray>
+  <td width=7% style=background:lightgray>
     <a href="?$USERSTRING&action=Consultar&orderby=actualizacion&direction=$direction">Actualización</a>
     
-  <td width=5% style=background:lightgray>
+  <td width=7% style=background:lightgray>
     <a href="?$USERSTRING&action=Consultar&orderby=fechafin&direction=$direction">Fechas</a>
     
   <td width=10% style=background:lightgray>
@@ -2161,13 +2202,13 @@ $table=<<<T
   <td width=10% style=background:lightgray>
     <a href="?$USERSTRING&action=Consultar&orderby=institutoid&direction=$direction">Instituto</a>
     
-  <td width=20% style=background:lightgray>
+  <td width=25% style=background:lightgray>
     <a href="?$USERSTRING&action=Consultar&orderby=cedula&direction=$direction">Solicitante</a>
     
-  <td width=15% style=background:lightgray>
+  <td width=8% style=background:lightgray>
     Descargas
     
-  <td width=20% style=background:lightgray>
+  <td width=15% style=background:lightgray>
     Acciones
     
 </tr>
