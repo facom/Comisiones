@@ -1740,7 +1740,7 @@ $diasdisponible $comment
 $fecharango_menu
 </td>
 </tr>
-<tr $disp1>
+<!--<tr $disp1>
 <td>Fechas en texto:</td>
 <td>
 <input $disp3 type="text" name="fecha" value="$fecha" size=30>
@@ -1752,7 +1752,7 @@ final) incluyendo las fechas de viaje. El decano solo puede conceder
 hasta 30 días calendario, si fuese mayor duración la solicitud debe ir
 a un acta de consejo de facultad para que sea recomendada a
 vicerrectoría de docencia.</td>
-</tr>
+</tr>-->
 <!---------------------------------------------------------------------->
 <tr class="discorta" $discortastyle>
 <td>Motivo de la comisión:</td>
