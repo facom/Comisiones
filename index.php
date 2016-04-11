@@ -412,7 +412,9 @@ M;
 	$error.=errorMessage("Recuerde que su solicitud no se actualizará al estado de cumplida hasta que no autorice el envio del correo de notificación");
       }
       $update.="qcumplido='$qcumplido',infocumplido='$infocumplido',$estado";
+      $update=trim($update,",");
       $sql="update Comisiones $update where comisionid='$comisionid';";
+      //echo "SQL:$sql<br/>";
       mysqlCmd($sql);
       $comision["qcumplido"]=1;
       $comision["destinoscumplido"]=$DESTINATARIOS_CUMPLIDOS[0][2].";";
@@ -1356,7 +1358,7 @@ $content.=<<<C
 <form>
 <h2>Recuperación de usuario</h2>
 <p>
-  Ingrese su correo electrónico:
+  Ingrese su correo electrónico (el correo institucional o el que usted haya fijado manualmente):
   <input type="text" name="emailrecupera" value="">
   <input type='hidden' name='action' value='recuperausuario'>
   <input type='submit' name='operation' value='Recupera'>
@@ -1381,7 +1383,7 @@ $content.=<<<C
 <p>
   Ingrese su número de cédula:<br/>
   <input type="text" name="cedularecupera" value=""><br/>
-  Ingrese su correo electrónico:<br/>
+  Ingrese su correo electrónico  (el correo institucional o el que usted haya fijado manualmente):<br/>
   <input type="text" name="emailrecupera" value="" size=30><br/>
   <input type='hidden' name='action' value='recuperapass'>
   <input type='submit' name='operation' value='Reinicia'>
@@ -2134,7 +2136,7 @@ $error
   <tr>
   <td colspan=2 style="text-align:center">
   ¿Confirma que desea enviar correos de notificación? 
-  <input type="checkbox" name="envia" value="Si">Si
+  <input type="checkbox" name="envia" value="Si" checked>Si
   </td>
   </tr>
 
