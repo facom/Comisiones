@@ -33,7 +33,7 @@ restore:
 	@-tar xf etc/data/comisiones.tar
 	@echo "Enter root mysql password..."
 	@mysql -u root -p Comisiones < etc/data/comisiones.sql
-	@p7zip etc/data/comisiones.tar
+	@-rm etc/data/comisiones*
 
 permissions:
 	@echo "Setting web permissions..."
