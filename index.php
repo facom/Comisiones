@@ -2242,7 +2242,7 @@ T;
     
     //CALCULA EL TIEMPO DESPUES DE FINALIZADA DE LA COMISION
     $tafter=mysqlCmd("select UNIX_TIMESTAMP(now())-UNIX_TIMESTAMP(fechafin) from Comisiones where comisionid='$tcomisionid'")[0];
-    
+
     $estadocolor=$COLORS[$testadox];
     if($ttipocomx=="noremunerada"){
       $estadocolor=$COLORS[$testadox."_noremunerada"];
@@ -2326,6 +2326,7 @@ T;
       if($taprobacion=="Si" and 
 	 $tqcumplido==0){
 	if($tafter>0){
+
 	$cumplido="<!-- -------------------------------------------------- -->
   <a href=?$USERSTRING&comisionid=$tcomisionid&action=Cumplido>
   Subir Cumplido</a><br/>";
@@ -2440,6 +2441,13 @@ $table
 $informes
 C;
  }
+
+////////////////////////////////////////////////////////////////////////
+//LISTA DE SOLICITUDES
+////////////////////////////////////////////////////////////////////////
+if($action=="Profesores"){
+	
+}
 
 ////////////////////////////////////////////////////////////////////////
 //LISTA DE SOLICITUDES
