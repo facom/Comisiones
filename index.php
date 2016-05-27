@@ -264,7 +264,7 @@ $content.=<<<C
 </td>
 </table>
 <hr/>
-<form action="index.php" method="post" enctype="multipart/form-data" accept-charset="utf-8">
+<form action="index.php?$USERSTRING" method="post" enctype="multipart/form-data" accept-charset="utf-8">
 C;
 
 ////////////////////////////////////////////////////////////////////////
@@ -532,7 +532,7 @@ $message=<<<M
 Apreciado(a) $persona,
 
 <p>
-El(La) Profesor(a) <b>$nombre</b> identificado con
+El(La) Empleado(a) <b>$nombre</b> identificado con
 documento <b>$cedula</b> del <b>$instituto</b>, ha concluido
 una <b>$ttipocom</b> con el objetivo de <b>$actividad</b>.  La
 actividad se realizó en la(s) fecha(s) <b>$fecha</b>.
@@ -883,7 +883,7 @@ R;
 	}
 	$subject="[Comisiones] Su solicitud de comisión/permiso ha sido aprobada";
 $message=<<<M
-  Se&ntilde;or(a) Profesor(a),
+  Se&ntilde;or(a) Empleado(a),
 <p>
 Su solicitud de comisión/permiso radicada en
 el <a href='bit.ly/fcen-comisiones'>Sistema de Solicitudes</a> en
@@ -908,7 +908,7 @@ M;
       
       $subject="[Comisiones] Su solicitud de comisión/permiso ha sido devuelta.";
 $message=<<<M
-  Se&ntilde;or(a) Profesor(a),
+  Se&ntilde;or(a) Empleado(a),
 <p>
 La solicitud radicada en el <a href='bit.ly/fcen-comisiones'>Sistema
 de Solicitudes</a> identificada con número '$comisionid' ha sido
@@ -951,7 +951,7 @@ M;
       $estadoactual=$ESTADOS[$estado];
       $subjectactual="[Comisiones] Actualización de Solicitud de Comisión/Permiso $comisionid";
 $messageactual=<<<M
-  Se&ntilde;or(a) Profesor(a),
+  Se&ntilde;or(a) Empleado(a),
 <p>
 Su solicitud de comisión/permiso radicada en
 el <a href='bit.ly/fcen-comisiones'>Sistema de Solicitudes</a> en
@@ -1530,7 +1530,7 @@ if($action=="Solicitar"){
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   $result=mysqlCmd("select comisionid from Comisiones where tipocom<>'noremunerada' and cedula='$cedula' and fechafin<now() and qcumplido+0=0;");
   if($result!=0){
-    $foot="<script>alert('Señor(a) Profesor(a), usted tiene Comisiones que ya concluyeron y que están a la espera de cumplido.')</script>";
+    $foot="<script>alert('Señor(a) Empleado(a), usted tiene Comisiones que ya concluyeron y que están a la espera de cumplido.')</script>";
     $faltacumplido="";
     foreach(array_keys($result) as $key){
       if(preg_match("/^\d+$/",$key)){continue;}
@@ -2068,6 +2068,7 @@ D;
 
 $content.=<<<C
 <a href="?$USERSTRING&action=Consultar">Lista de Solicitudes</a> | 
+<a href="?$USERSTRING&action=Profesores">Lista de Empleados</a> | 
 $browsing_help | 
 <a href="?$USERSTRING">Salir</a>
 <p/>
@@ -2405,6 +2406,7 @@ T;
  $informes="";
  if(abs($qperm)){
    $informes="<a href='?usercedula=$cedula&userpass=$userpass&action=Informes'>Informes</a> | <a href='?usercedula=$cedula&userpass=$userpass&operation=Backup&action=Consultar'>Hacer respaldo</a>";
+   $lprofesores="<a href='?$USERSTRING&action=Profesores'>Lista de Empleados</a> | ";
  }
 
  //OTROS ORDENAMIENTOS
@@ -2414,6 +2416,8 @@ $content.=<<<C
 $error
 <a href="?usercedula=$usercedula&userpass=$userpass&action=Solicitar">Nueva Solicitud</a> | 
 <a href="?$USERSTRING&action=Consultar">Lista de Solicitudes</a> | 
+$lprofesores 
+
 $browsing_help | 
 <a href="?$USERSTRING">Salir</a>
 <h2>Lista de solicitudes.</h2>
@@ -2443,11 +2447,151 @@ C;
  }
 
 ////////////////////////////////////////////////////////////////////////
-//LISTA DE SOLICITUDES
+//LISTA DE PROFESORES
+////////////////////////////////////////////////////////////////////////
+if($action=="EditarProfesor"){
+
+  if($subaction=="Guardar"){
+    if($ucedula!=$ecedula){
+      if($ucedula!="0000000"){
+	$error.=errorMessage("Cambiando documento del empleado");
+	$sql="delete from Profesores where cedula='$ucedula'";
+	mysqlCmd($sql);
+      }else{
+	$epass=md5("$ecedula");
+      }
+    }
+    $sql="insert into Profesores (tipoid,cedula,nombre,email,tipo,institutoid,dedicacion,pass) values ('$etipoid','$ecedula','$enombre','$eemail','$etipo','$einstitutoid','$ededicacion','$epass') on duplicate key update tipoid=VALUES(tipoid),cedula=VALUES(cedula),nombre=VALUES(nombre),email=VALUES(email),tipo=VALUES(tipo),institutoid=VALUES(institutoid),dedicacion=VALUES(dedicacion),pass=VALUES(pass)";
+    mysqlCmd($sql);
+    $error.=errorMessage("Información del empleado actualizada");
+  }
+  if(isset($ecedula)){$ucedula=$ecedula;}
+  $profesor=mysqlCmd("select * from Profesores where cedula='$ucedula'",$qout=1);
+
+$content.=<<<C
+  <h3>Edición de la Información del Empleado</h3>
+
+<a href="?$USERSTRING&action=Consultar">Lista de Solicitudes</a> | 
+<a href="?$USERSTRING&action=Profesores">Lista de Empleados</a> | 
+$browsing_help | 
+<a href="?$USERSTRING">Salir</a>
+<p></p>
+$error
+<input type="hidden" name="action" value="EditarProfesor">
+<input type="hidden" name="ucedula" value="$ucedula">
+<table border=1px>
+C;
+
+  foreach(array_keys($profesor[0]) as $key){
+    if($key=="pass"){
+      $epass=$profesor[0]["pass"];
+      $content.="<input type='hidden' name='epass' value='$epass'>";
+    }
+    if(preg_match("/\d/",$key) or
+       $key=="pass" or
+       $key=="permisos"
+       ){continue;}
+    
+    $help=$CAMPOSHELP["$key"];
+    $value=$profesor[0]["$key"];
+$content.=<<<C
+<tr>
+  <td>$key</td>
+  <td>
+    <input type="text" name="e$key" value="$value" size="50" placeholder="$help">
+  </td>
+</tr>
+C;
+  }
+$content.=<<<C
+<tr><td colspan=2><input type="submit" name="subaction" value="Guardar"></td></tr>
+</table>
+</form>
+C;
+}
+
+////////////////////////////////////////////////////////////////////////
+//LISTA DE PROFESORES
 ////////////////////////////////////////////////////////////////////////
 if($action=="Profesores"){
-	
-}
+
+  //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  //REMOVE
+  //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  if($subaction=="Remove"){
+    $sql="delete from Profesores where cedula='$ucedula'";
+    mysqlCmd($sql);
+    $error.=errorMessage("Profesor '$ucedula' borrado...");
+  }
+
+  //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  //LIST
+  //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+  $profesores=mysqlCmd("select * from Profesores order by institutoid,nombre",$qout=1);
+  $content.=<<<C
+
+<a href="?$USERSTRING&action=Consultar">Lista de Solicitudes</a> | 
+<a href="?$USERSTRING&action=Profesores">Lista de Empleados</a> | 
+$browsing_help | 
+<a href="?$USERSTRING">Salir</a>
+
+<p>
+$error
+</p>
+
+<center>
+
+<h3>Lista de Empleados</h3>
+
+<p>
+<a href="?$USERSTRING&action=EditarProfesor&ucedula=0000000">
+  Crear nuevo empleado
+</a>
+</p>
+
+<table border=1px cellspacing=0>
+  <thead>
+    <th>#</th>
+    <th>Instituto</th>
+    <th>Cédula</th>
+    <th>Nombre</th>
+    <th>Tipo</th>
+    <th>Acciones</th>
+  </thead>
+C;
+  $i=1;
+  foreach($profesores as $profesor){
+    $content.="<tr>";
+
+    foreach(array_keys($profesor) as $key){
+      if(preg_match("/\d/",$key)){continue;}
+      if($key=="cedula"){
+	$key="ucedula";
+	$$key=$profesor["cedula"];
+      }else{
+	$$key=$profesor["$key"];
+      }
+    }
+    if($ucedula=="0000000"){continue;}
+    $instituto=$INSTITUTOS["$institutoid"];
+
+$content.=<<<C
+<td>$i</td>
+<td>$instituto</td>
+<td>$ucedula</td>
+<td>$nombre</td>
+<td>$tipo</td>
+<td>
+  <a href="?$USERSTRING&action=Profesores&subaction=Remove&ucedula=$ucedula">Borrar</a> | 
+  <a href="?$USERSTRING&action=EditarProfesor&ucedula=$ucedula">Editar</a>
+</td>
+C;
+    $content.="</tr>";
+    $i++;
+  }
+  $content.="</table></center>";
+}	
 
 ////////////////////////////////////////////////////////////////////////
 //LISTA DE SOLICITUDES
