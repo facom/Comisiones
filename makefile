@@ -28,6 +28,7 @@ backup:
 
 restore:
 	@echo "Restoring table Quakes..."
+	@-cat etc/data/dump/comisiones* > etc/data/comisiones.tar.7z
 	@-p7zip -d etc/data/comisiones.tar.7z
 	@-tar xf etc/data/comisiones.tar
 	@echo "Enter root mysql password..."
