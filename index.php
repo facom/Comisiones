@@ -2069,6 +2069,7 @@ D;
 $content.=<<<C
 <a href="?$USERSTRING&action=Consultar">Lista de Solicitudes</a> | 
 <a href="?$USERSTRING&action=Profesores">Lista de Empleados</a> | 
+<a href="?$USERSTRING&action=Trash">Bandeja de salida</a> | 
 $browsing_help | 
 <a href="?$USERSTRING">Salir</a>
 <p/>
@@ -2406,7 +2407,7 @@ T;
  $informes="";
  if(abs($qperm)){
    $informes="<a href='?usercedula=$cedula&userpass=$userpass&action=Informes'>Informes</a> | <a href='?usercedula=$cedula&userpass=$userpass&operation=Backup&action=Consultar'>Hacer respaldo</a>";
-   $lprofesores="<a href='?$USERSTRING&action=Profesores'>Lista de Empleados</a> | ";
+   $lprofesores="<a href='?$USERSTRING&action=Profesores'>Lista de Empleados</a> | <a href=?$USERSTRING&action=Trash'>Bandeja de salida</a> | ";
  }
 
  //OTROS ORDENAMIENTOS
@@ -2451,6 +2452,7 @@ C;
 ////////////////////////////////////////////////////////////////////////
 if($action=="EditarProfesor"){
 
+  $qnuevo=0;
   if($subaction=="Guardar"){
     if($ucedula!=$ecedula){
       if($ucedula!="0000000"){
@@ -2468,6 +2470,11 @@ if($action=="EditarProfesor"){
   if(isset($ecedula)){$ucedula=$ecedula;}
   $profesor=mysqlCmd("select * from Profesores where cedula='$ucedula'",$qout=1);
 
+  if($subaction=="Nuevo"){
+    $profesor=array(array("tipoid"=>"","cedula"=>"","nombre"=>"","email"=>"","tipo"=>"","institutoid"=>"","dedicacion"=>"","pass"=>""));
+    $qnuevo=1;
+  }
+  
 $content.=<<<C
   <h3>Edición de la Información del Empleado</h3>
 
@@ -2487,10 +2494,9 @@ C;
       $epass=$profesor[0]["pass"];
       $content.="<input type='hidden' name='epass' value='$epass'>";
     }
-    if(preg_match("/\d/",$key) or
-       $key=="pass" or
-       $key=="permisos"
-       ){continue;}
+    if(preg_match("/\d/",$key)){continue;}
+    if(($key=="pass" or
+	$key=="permisos")){continue;}
     
     $help=$CAMPOSHELP["$key"];
     $value=$profesor[0]["$key"];
@@ -2528,7 +2534,7 @@ if($action=="Profesores"){
   //LIST
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
-  $profesores=mysqlCmd("select * from Profesores order by institutoid,nombre",$qout=1);
+  $profesores=mysqlCmd("select * from Profesores order by nombre",$qout=1);
   $content.=<<<C
 
 <a href="?$USERSTRING&action=Consultar">Lista de Solicitudes</a> | 
@@ -2545,7 +2551,7 @@ $error
 <h3>Lista de Empleados</h3>
 
 <p>
-<a href="?$USERSTRING&action=EditarProfesor&ucedula=0000000">
+<a href="?$USERSTRING&action=EditarProfesor&ucedula=0000000&subaction=Nuevo">
   Crear nuevo empleado
 </a>
 </p>
@@ -2562,7 +2568,14 @@ $error
 C;
   $i=1;
   foreach($profesores as $profesor){
+
     $content.="<tr>";
+    
+    //echo "$i:".print_r($profesor,true)."<br/>";
+
+    if(isBlank($profesor["nombre"])){
+      continue;
+    }
 
     foreach(array_keys($profesor) as $key){
       if(preg_match("/\d/",$key)){continue;}
