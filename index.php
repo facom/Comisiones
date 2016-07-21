@@ -1225,8 +1225,12 @@ R;
   //////////////////////////////////////////////////////////////
   if($operation=="Borrar"){
     mysqlCmd("update Comisiones set qtrash='1' where comisionid='$comisionid'");
-    //shell_exec("mv comisiones/$comisionid trash/");
     $error=errorMessage("Comisión '$comisionid' enviada a la papelera de reciclaje.");
+  }
+  if($operation=="BorrarDefinitivamente"){
+    mysqlCmd("delete from Comisiones where comisionid='$comisionid'");
+    shell_exec("rm -r comisiones/$comisionid");
+    $error=errorMessage("Comisión '$comisionid' borrada definitivamente.");
   }
 }
 
@@ -2164,10 +2168,18 @@ if($action=="Consultar"){
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   //VERIFY PERMISSIONS
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+  $reciclartxt="Reciclar";
+  $reciclaraction="Borrar";
+  $actiontxt="";
   $trashtxt="";
   if(!isset($qtrash)){$qtrash=0;}
   $where="where qtrash='$qtrash' ";
-  if($qtrash){$trashtxt="Recicladas";}
+  if($qtrash){
+    $trashtxt="Recicladas";
+    $reciclartxt="Borrar";
+    $actiontxt="&qtrash=1";
+    $reciclaraction="BorrarDefinitivamente";
+  }
 
   $generar="";
   if(abs($qperm)==0){
@@ -2367,11 +2379,12 @@ T;
     }
 
     //BORRA SOLO SI NO HA SIDO SOLICITADA
-    if($taprobacion!="Si" and 
-       $tvistobueno!="Si"){
+    if(($taprobacion!="Si" and 
+       $tvistobueno!="Si") or
+       $qtrash){
       $borrar="<!-- -------------------------------------------------- -->
-  <a href=?$USERSTRING&comisionid=$tcomisionid&operation=Borrar&action=Consultar>
-  Reciclar</a>";
+  <a href=?$USERSTRING&comisionid=$tcomisionid&operation=$reciclaraction&action=Consultar$actiontxt>
+  $reciclartxt</a>";
     }
 
     //CREA TABLA
