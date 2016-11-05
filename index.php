@@ -37,7 +37,7 @@ $QOVER=0; //1 para obligar a enviar correo cuando esta en test
 if(!$QTEST){
 $DESTINATARIOS_CUMPLIDOS=array(
    array("Secretaria del Decanato","Luz Mary Castro","luz.castro@udea.edu.co"),
-   array("Secretaria del CIEN","Maricela Botero","maricela.boteros@udea.edu.co"),
+   array("Secretaria del CIEN","Ana Catalina Fernández","ana.fernandez@udea.edu.co"),
    array("Programa de Extensión","Natalia López","njlopez76@gmail.com"),
    array("Fondo de Pasajes Internacionales","Mauricio Toro","fondosinvestigacion@udea.edu.co"),
    array("Vicerrectoria de Investigación","Mauricio Toro","tramitesinvestigacion@udea.edu.co"),
@@ -449,21 +449,24 @@ M;
     //ADD NEW E-MAILS
     $emails=preg_split("/\s*,\s*/",$otros_destinatarios);
     $i=count($DESTINATARIOS_CUMPLIDOS);
+    $destinatarios=array();
     foreach($emails as $demail){
       if(isBlank($demail)){continue;}
       array_push($DESTINATARIOS_CUMPLIDOS,array($demail,$demail,$demail));
       array_push($destinatarios,$i);
       $i++;
     }
-
+    //echo "Emails:".print_r($DESTINATARIOS_CUMPLIDOS,true);
+    //echo "Destinatarios:".print_r($destinatarios,true)."<br/>";
     //ADD E-MAILS TO DATABASE
     $destintxt="destinoscumplido='$destinoscumplido";
     $i=-1;
     foreach($DESTINATARIOS_CUMPLIDOS as $destino){
+        //echo "Destino: ".print_r($destino,true)."<br/>";
 	$i++;
 	$index=array_search($i,$destinatarios);
+	//echo "Index: $index<br/>";
 	if(isBlank($index)){continue;}
-	
 
 	$dependencia=$destino[0];
 	$persona=$destino[1];
@@ -474,6 +477,7 @@ M;
 	}
     }
     $destintxt.="'";
+    //echo "Destinos: $destintxt";
     $sql="update Comisiones set $destintxt where comisionid='$comisionid';";
     mysqlCmd($sql);
 
