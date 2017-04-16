@@ -24,7 +24,7 @@ pull:
 
 backup:
 	@echo "Backuping comisiones..."
-	@bash combackup.sh Quakes
+	@bash combackup.sh 
 
 restore:
 	@echo "Restoring table Quakes..."
