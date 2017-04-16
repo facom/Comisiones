@@ -231,7 +231,7 @@ $content.=<<<C
   <script src="util/daterangepicker/jquery.comiseo.daterangepicker.js"></script>
   <script>
     function selectCorta(selection){
-	if($(selection).val().localeCompare("noremunerada")==0){
+	if($(selection).val().localeCompare("noremunerada")==0 || $(selection).val().localeCompare("calamidad")==0){
 	  $(".discorta").hide();
 	  $(".discortashow").show();
 	}else{
@@ -656,7 +656,7 @@ M;
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     //
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-    if(abs($qperm)==1 and $vistobueno=="Si" and $tipocom=="noremunerada"){
+    if(abs($qperm)==1 and $vistobueno=="Si" and ($tipocom=="noremunerada" or $tipocom=="calamidad")){
       $parts=preg_split("/-/",$DATE);
       $year=$parts[0];
       if($year!=$ano){
@@ -682,7 +682,7 @@ M;
 
     if($aprobacion=="Si"){
       $estado="aprobada";
-      if($tipocom!="noremunerada"){
+      if($tipocom!="noremunerada" and $tipocom!="calamidad"){
 	$result=mysqlCmd("show table status where Name='Resoluciones';",$qout=0,$qlog=0);
 	$resolucion=$result["Auto_increment"];
 	$sql="insert into Resoluciones (comisionid) values ('$comisionid');";
@@ -882,7 +882,7 @@ Para obtener una copia de la resolución de click en <a href="$URL/comisiones/$c
   En caso de que el enlace este roto (no se haya expedido la resolución) pregunte en la vicedecanatura por la misma o espere a que el link aparezca en el Sistema de Solicitudes.
 </p>
 R;
-        if($tipocom=="noremunerada"){
+        if($tipocom=="noremunerada"  or $tipocom=="calamidad"){
 	  $restxt="";
 	}
 	$subject="[Comisiones] Su solicitud de comisión/permiso ha sido aprobada";
@@ -1021,6 +1021,7 @@ M;
     $rnombre=strtoupper($nombre);
 
     //echo "TIPO:$rtipo,$tipocom,$rtipocom,$rtipoid,$rnombre,$rinstituto,$fecha<br/>";
+    //echo "TIPO:$rtipo,$tipocom,$rtipocom,$rtipoid,$rnombre,$rinstituto,$fecha<br/>";
 
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     //STYLES
@@ -1035,6 +1036,93 @@ M;
     //CREATE FILE
     //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
     $fl=fopen("comisiones/$comisionid/resolucion-$comisionid.html","w");
+
+    if($tipocom=="noremunerada"  or $tipocom=="calamidad"){
+$resoltxt=<<<R
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <style type="text/css">
+  BODY{
+  font-size:12px;
+  font-family:Times;
+  }
+  td{
+  font-size:18px;
+  font-family:Times;
+  }
+  </style>
+</head>
+
+<body>
+
+<table border=0 width=$tablewidth style=$tablestyle>
+  <tr>
+    <td width=10%>
+      <img src="../../images/udea.jpg" width=100>
+    </td>
+    <td width=20%></td>
+    <td width=40% style='text-align:center'>
+      <b>FACULTAD DE CIENCIAS EXACTAS<br/>Y NATURALES</b>
+    </td>
+  </tr>
+</table>
+
+<table border=0 width=$tablewidth style=$tablestyle>
+<tr><td>
+
+<div style="height:$vspace"></div>
+
+<p>
+Medellín, $fecharesolucion
+</p>
+
+<br style="margin-bottom:2em"/>
+
+<p>
+Señor(a)<br/>
+<b>$rnombre</b><br/>
+Facultad de Ciencias Exactas y Naturales<br/>
+Ciudad
+</p>
+
+<br style="margin-bottom:2em"/>
+
+<p>
+Cordial saludo,
+</p>
+
+<p align="justify">
+La Decana de la Facultad de Ciencias Exactas y Naturales y en uso de
+las atribuciones conferidas mediante el artículo 53 literal ñ del
+Acuerdo Superior No. 1 de 1994, se le concede permiso durante el(los) día(s)
+$fecha para asuntos de índole personal.
+</p> 
+
+<br style="margin-bottom:2em"/>
+
+<p>
+Atentamente,
+</p>
+
+<br style="margin-bottom:2em"/>
+
+<p>
+<img src="../../images/decano.jpg" width=300px><br/>
+<b>NORA EUGENIA RESTREPO SÁNCHEZ</b><br/>
+$DECANOTXT, Facultad de Ciencias Exactas y Naturales
+</p>
+
+<p style="font-size:14px">
+Copia: $COORDINADOR, $COORDINADORTXT de Talento Humano Archivo.
+</p>
+
+</td></tr>
+</table>
+</body>
+</html>
+R;
+    }else{
 $resoltxt=<<<R
 <html>
 <head>
@@ -1118,15 +1206,102 @@ $DECANOTXT, Facultad de Ciencias Exactas y Naturales
 Copia: $COORDINADOR, $COORDINADORTXT de Talento Humano<br/>Archivo.
 </p>
 
-</body>
-</html>
 </td></tr>
 </table>
+</body>
+</html>
 R;
+    }
     fwrite($fl,$resoltxt);
     fclose($fl);
 
     $fl=fopen("comisiones/$comisionid/resolucion-blank-$comisionid.html","w");
+    if($tipocom=="noremunerada"  or $tipocom=="calamidad"){
+$resoltxt=<<<R
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+  <style type="text/css">
+  BODY{
+  font-size:12px;
+  font-family:Times;
+  }
+  td{
+  font-size:18px;
+  font-family:Times;
+  }
+  </style>
+</head>
+
+<body>
+
+<table border=0 width=$tablewidth style=$tablestyle>
+  <tr>
+    <td width=10%>
+      <img src="../../images/udea-fake.jpg" width=100>
+    </td>
+    <td width=20%></td>
+    <td width=40% style='text-align:center'>
+      <!--<b>FACULTAD DE CIENCIAS EXACTAS<br/>Y NATURALES</b>-->
+    </td>
+  </tr>
+</table>
+
+<table border=0 width=$tablewidth style=$tablestyle>
+<tr><td>
+
+<div style="height:$vspace"></div>
+
+<p>
+Medellín, $fecharesolucion
+</p>
+
+<br style="margin-bottom:2em"/>
+
+<p>
+Señor(a)<br/>
+<b>$rnombre</b><br/>
+Facultad de Ciencias Exactas y Naturales<br/>
+Ciudad
+</p>
+
+<br style="margin-bottom:2em"/>
+
+<p>
+Cordial saludo,
+</p>
+
+<p align="justify">
+La Decana de la Facultad de Ciencias Exactas y Naturales y en uso de
+las atribuciones conferidas mediante el artículo 53 literal ñ del
+Acuerdo Superior No. 1 de 1994, se le concede permiso durante el(los) día(s)
+$fecha para asuntos de índole personal.
+</p> 
+
+<br style="margin-bottom:2em"/>
+
+<p>
+Atentamente,
+</p>
+
+<br style="margin-bottom:2em"/>
+
+<p>
+<img src="../../images/decano-fake.jpg" width=300px><br/>
+<b>NORA EUGENIA RESTREPO SÁNCHEZ</b><br/>
+$DECANOTXT, Facultad de Ciencias Exactas y Naturales
+</p>
+
+<p style="font-size:14px">
+Copia: $COORDINADOR, $COORDINADORTXT de Talento Humano Archivo.
+</p>
+
+</td></tr>
+</table>
+</body>
+</html>
+R;
+    }else{
 $resoltxt=<<<R
 <html>
 <head>
@@ -1215,6 +1390,7 @@ Copia: $COORDINADOR, $COORDINADORTXT de Talento Humano Archivo.
 </td></tr>
 </table>
 R;
+    }
     fwrite($fl,$resoltxt);
     fclose($fl);
 
@@ -1493,7 +1669,7 @@ if($action=="Solicitar"){
   }  
   $today=preg_split("/-/",$DATE);
   $year=$today[0];
-  $cresults=mysqlCmd("select sum(extra1) from Comisiones where cedula='$cedula' and tipocom='noremunerada' and actualizacion like '$year%'");
+  $cresults=mysqlCmd("select sum(extra1) from Comisiones where cedula='$cedula' and (tipocom='noremunerada' or tipocom='calamidad') and actualizacion like '$year%' and qtrash+0<1 and (estado='aprobada' or estado='cumplida')");
   $diasdisponible=6-$cresults[0];
   $comment="";
   if($diasdisponible==0){
@@ -1538,7 +1714,7 @@ if($action=="Solicitar"){
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   //CHECK CUMPLIDOS PENDIENTES
   //%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  $result=mysqlCmd("select comisionid from Comisiones where tipocom<>'noremunerada' and cedula='$cedula' and fechafin<now() and qcumplido+0=0;");
+  $result=mysqlCmd("select comisionid from Comisiones where (tipocom<>'noremunerada' and tipocom<>'calamidad') and cedula='$cedula' and fechafin<now() and qcumplido+0=0;");
   if($result!=0){
     $foot="<script>alert('Señor(a) Empleado(a), usted tiene Comisiones que ya concluyeron y que están a la espera de cumplido.')</script>";
     $faltacumplido="";
@@ -1612,7 +1788,7 @@ R;
   
   $discortastyle="";
   $discortashowstyle="style='display:none'";
-  if($tipocom=="noremunerada"){
+  if($tipocom=="noremunerada"  or $tipocom=="calamidad"){
     $discortastyle="style='display:none'";
     $discortashowstyle="";
   }
@@ -1634,18 +1810,20 @@ R;
     $diasvec["$i"]=$i;
   }
   $diassel=generateSelection($diasvec,"diaspermiso",$diaspermiso,$disabled="$disp3");
+  $doctype="Resolución";
   $generar="
   <a href=?$USERSTRING&comisionid=$comisionid&operation=Resolucion&action=Consultar>
     Generar
   </a>";
-  if($tipocom=="noremunerada"){
-    $generar="<i>No Resolución</i>";
+  if($tipocom=="noremunerada"  or $tipocom=="calamidad"){
+    //$generar="<i>No Resolución</i>";
+    $doctype="Oficio";
   }
   if($aprobacion=="No"){
     $generar="<i>No aprobada</i>";
   }
   $fecharango_menu=fechaRango("fecharango",$fechaini,$fechafin);
-
+  
 $content.=<<<C
   <a href="?usercedula=$usercedula&userpass=$userpass&action=Solicitar">Nueva Solicitud</a> |
   <a href="?$USERSTRING&action=Consultar">Lista de Solicitudes</a> | 
@@ -1975,8 +2153,8 @@ comisión.</td>
 <td>$aprosel</td>
 </tr>
 <!---------------------------------------------------------------------->
-<tr $disp2 class="discorta" $discortastyle>
-<td>Resolución:</td>
+<tr $disp2>
+<td>$doctype:</td>
 <td>$generar</td>
 </tr>
 <!---------------------------------------------------------------------->
@@ -2269,7 +2447,7 @@ T;
     $tafter=mysqlCmd("select UNIX_TIMESTAMP(now())-UNIX_TIMESTAMP(fechafin) from Comisiones where comisionid='$tcomisionid'")[0];
 
     $estadocolor=$COLORS[$testadox];
-    if($ttipocomx=="noremunerada"){
+    if($ttipocomx=="noremunerada"  or $ttipocomx=="calamidad"){
       $estadocolor=$COLORS[$testadox."_noremunerada"];
     }
 
@@ -2292,16 +2470,23 @@ T;
     $reslink="";
     $extrares="";
     
-    if(abs($qperm)==2 and $taprobacion=="Si" and $ttipocomx!="noremunerada"){
+    if(abs($qperm)==2 and $taprobacion=="Si" /*and ($ttipocomx!="noremunerada" and $ttipocomx!="calamidad")*/){
+
       $generar="<!-- -------------------------------------------------- -->
     <a href=?$USERSTRING&comisionid=$tcomisionid&operation=Resolucion&action=Consultar>
       Generar</a><br/>";
     }
+
+    $doctype="Resolución";
+    if($ttipocomx=="noremunerada" or $ttipocomx=="calamidad"){
+      $doctype="Oficio";
+    }
+
     if(file_exists("comisiones/$tcomisionid/resolucion-$tcomisionid.html") and
        !file_exists("comisiones/$tcomisionid/.nogen")){
       $reslink="<!-- -------------------------------------------------- -->
     <a href=comisiones/$tcomisionid/resolucion-$tcomisionid.html target='_blank'>
-      Resolucion</a>
+      $doctype</a>
   (<a href=comisiones/$tcomisionid/resolucion-$tcomisionid.pdf target='_blank'>pdf</a>)<br/>
 ";
       $extrares="";
@@ -2345,7 +2530,7 @@ T;
     $cumplido="";
 
     //CUMPLIDO STATUS
-    if($ttipocomx!="noremunerada"){
+    if($ttipocomx!="noremunerada" and $ttipocomx!="calamidad"){
 
       //APROBADA + NO CUMPLIDA + TIEMPO PASADO
       if($taprobacion=="Si" and 
@@ -2768,7 +2953,7 @@ $error
     <td>
       Muestre todos los permisos:<br/>
       <pre>
-	* from Comisiones where tipocom='noremunerada'
+	* from Comisiones where (tipocom='noremunerada' and tipocom='calamidad')
       </pre>
     </td>
   </tr>
@@ -2835,7 +3020,7 @@ $error
        (instituto en minúsculas y sin tilde), fecha (fecha de
        radicación), actividad (actividad de la comisión), lugar (lugar
        de la comisión), tipocom (tipo de comisión, sevicios, estudios,
-       noremunerada - es decir permiso), objeto (objetivo de la
+       noremunerada - es decir permiso, calamidad), objeto (objetivo de la
        comisión), idioma (idioma de la comisión), dedicacion (¿tiene
        dedicación exclusiva?), estado (estado de la solicitud),
        radicacion (fecha de radiación), actualizacion (fecha de
